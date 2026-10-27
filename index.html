@@ -3,92 +3,136 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PRO Admin Control Panel</title>
+  <title>EduProjects - Talaba Portali</title>
+  
+  <!-- PWA Manifest va Logotip sozlamalari -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#6366f1">
+  
+  <!-- iPhone (iOS) uchun maxsus sozlamalar va ikonka -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="EduProjects">
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3135/3135715.png">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-
-  <!-- Firebase SDK (Realtime Database uchun) -->
+  
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
   <style>
-    body { background-color: #070a12; color: #f8fafc; font-family: sans-serif; }
-    .glass-box { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    body { background-color: #0b0f19; color: #f8fafc; font-family: sans-serif; }
+    .glass-card { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
   </style>
 </head>
-<body class="pb-16">
+<body class="pb-24">
 
-  <header class="sticky top-0 z-40 glass-box px-4 py-4 flex justify-between items-center border-b border-slate-800">
-    <div class="flex items-center space-x-2">
-      <span class="bg-indigo-600/20 text-indigo-400 p-2 rounded-xl border border-indigo-500/20">
-        <i class="fa-solid fa-shield-halved text-lg"></i>
-      </span>
+  <header class="sticky top-0 z-40 glass-card px-4 py-4 flex justify-between items-center border-b border-slate-800">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-indigo-500/30">
+        <i class="fa-solid fa-graduation-cap"></i>
+      </div>
       <div>
-        <h1 class="text-sm font-bold text-white leading-tight">Admin Control Panel</h1>
-        <p class="text-[10px] text-slate-400">EduProjects Tizimi</p>
+        <h1 class="text-base font-bold text-white leading-tight">EduProjects</h1>
+        <p class="text-[11px] text-indigo-400 font-medium">Tayyor ishlar & Veb-saytlar</p>
       </div>
     </div>
+    
+    <!-- Ilovani o'rnatish tugmasi -->
+    <button id="installBtn" onclick="installApp()" class="hidden bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-xl font-semibold flex items-center gap-1.5 shadow-md">
+      <i class="fa-solid fa-download"></i> O'rnatish
+    </button>
   </header>
 
-  <main class="max-w-md mx-auto px-4 mt-6 space-y-6">
-
-    <div class="grid grid-cols-2 gap-3">
-      <div class="glass-box p-4 rounded-2xl border border-slate-800">
-        <div class="text-[10px] text-slate-400 uppercase font-semibold">Tushgan So'rovlar</div>
-        <div class="text-xl font-extrabold text-white mt-1" id="statPending">0</div>
-      </div>
-      <div class="glass-box p-4 rounded-2xl border border-slate-800">
-        <div class="text-[10px] text-emerald-400 uppercase font-semibold">Jami Daromad</div>
-        <div class="text-lg font-extrabold text-emerald-400 mt-1" id="statRevenue">0 UZS</div>
-      </div>
+  <main class="max-w-md mx-auto px-4 mt-6">
+    <div class="relative mb-5">
+      <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-slate-400"></i>
+      <input type="text" id="searchInput" oninput="renderProjects()" placeholder="Loyiha yoki fan nomini kiriting..." 
+             class="w-full bg-slate-900/80 border border-slate-800 rounded-2xl pl-11 pr-4 py-3 text-xs focus:outline-none focus:border-indigo-500 text-white placeholder-slate-500">
     </div>
 
-    <div class="glass-box p-5 rounded-3xl border border-slate-800 shadow-2xl">
-      <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
-        <i class="fa-solid fa-plus-circle text-indigo-400 text-sm"></i> Yangi Loyiha Qo'shish
-      </h2>
-      <form onsubmit="saveProject(event)" class="space-y-3">
-        <input type="text" id="pTitle" required placeholder="Loyiha Nomi" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+    <div class="flex space-x-2 overflow-x-auto pb-4 scrollbar-none" id="categoryFilters">
+      <button onclick="setCategory('all')" class="cat-pill px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 text-white shadow-md">Barchasi</button>
+      <button onclick="setCategory('Mustaqil ish')" class="cat-pill px-4 py-2 rounded-xl text-xs font-semibold bg-slate-900 border border-slate-800 text-slate-400">Mustaqil ish</button>
+      <button onclick="setCategory('Veb-sayt')" class="cat-pill px-4 py-2 rounded-xl text-xs font-semibold bg-slate-900 border border-slate-800 text-slate-400">Veb-saytlar</button>
+      <button onclick="setCategory('Kurs ishi')" class="cat-pill px-4 py-2 rounded-xl text-xs font-semibold bg-slate-900 border border-slate-800 text-slate-400">Kurs ishi</button>
+    </div>
+
+    <div id="projectsList" class="space-y-4">
+      <div class="text-center py-12 text-slate-500 text-xs">
+        <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-indigo-500"></i>
+        <p>Loyihalar yuklanmoqda...</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- To'lov Modali -->
+  <div id="paymentModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-card w-full max-w-sm rounded-3xl p-6 relative border border-slate-700/60 max-h-[90vh] overflow-y-auto">
+      <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <h3 class="text-base font-bold text-white mb-1" id="modalTitle">Loyiha Nomi</h3>
+      <p class="text-xs text-slate-400 mb-4">Quyidagi kartalardan biriga pul o'tkazing va chekni yuboring</p>
+
+      <div id="cardsContainer" class="space-y-2 mb-4"></div>
+
+      <div class="bg-indigo-950/40 border border-indigo-500/20 p-3 rounded-2xl mb-4 text-center">
+        <div class="text-[10px] text-slate-400 uppercase">To'lanishi Kerak bo'lgan Summa:</div>
+        <div class="text-indigo-400 font-extrabold text-lg" id="modalPrice">0 UZS</div>
+      </div>
+
+      <form onsubmit="submitPayment(event)" class="space-y-3">
+        <input type="hidden" id="modalProjectId">
+        <input type="hidden" id="requiredPrice">
         
-        <div class="grid grid-cols-2 gap-2">
-          <select id="pCategory" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-2 py-2.5 text-xs text-white focus:outline-none">
-            <option value="Mustaqil ish">Mustaqil ish</option>
-            <option value="Veb-sayt">Veb-sayt</option>
-            <option value="Kurs ishi">Kurs ishi</option>
-          </select>
-          <input type="number" id="pPrice" required placeholder="Narxi (UZS)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+        <div>
+          <label class="block text-[11px] text-slate-300 font-medium mb-1">Ism Familiyangiz:</label>
+          <input type="text" id="studentName" required placeholder="Masalan: Ali Valiyev" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-[11px] text-slate-300 font-medium mb-1">Telegram yoki Telefon:</label>
+          <input type="text" id="studentContact" required placeholder="@username yoki +99890..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-[11px] text-slate-300 font-medium mb-1">O'tkazilgan Summa:</label>
+          <input type="number" id="paidAmount" required placeholder="Masalan: 20000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-[11px] text-slate-300 font-medium mb-1">To'lov Cheki (Skrinshot):</label>
+          <input type="file" id="receiptImg" accept="image/*" required onchange="encodeImageFileAsURL(this)" class="w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white">
         </div>
 
-        <input type="url" id="pFileUrl" required placeholder="Fayl Linki (Google Drive / Telegram)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
-        <input type="url" id="pDemoUrl" placeholder="Demo Link (Veb-sayt bo'lsa)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
-        
-        <textarea id="pDesc" rows="2" placeholder="Batafsil tavsif..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"></textarea>
-
-        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl text-xs transition shadow-lg shadow-indigo-600/30">
-          Barchaga E'lon Qilish
+        <button type="submit" id="submitBtn" class="w-full mt-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-2xl text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30">
+          <i class="fa-solid fa-paper-plane"></i> Chekni Yuborish
         </button>
       </form>
     </div>
-
-    <div class="glass-box p-5 rounded-3xl border border-slate-800">
-      <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
-        <i class="fa-solid fa-receipt text-amber-400 text-sm"></i> Kelib Tushgan To'lovlar
-      </h2>
-      <div id="requestsList" class="space-y-3">
-        <div class="text-center text-slate-500 text-xs py-4">Yuklanmoqda...</div>
-      </div>
-    </div>
-
-    <div class="glass-box p-5 rounded-3xl border border-slate-800">
-      <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
-        <i class="fa-solid fa-folder-open text-indigo-400 text-sm"></i> Barcha Loyihalar
-      </h2>
-      <div id="adminProjectsList" class="space-y-3"></div>
-    </div>
-
-  </main>
+  </div>
 
   <script>
+    // PWA O'rnatish (Install) mantiqi
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('installBtn').classList.remove('hidden');
+    });
+
+    function installApp() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            document.getElementById('installBtn').classList.add('hidden');
+          }
+          deferredPrompt = null;
+        });
+      }
+    }
+
     const firebaseConfig = {
       apiKey: "AIzaSyDMmB0tW-JGizWSOdlFJJd68p6sksrlS_8",
       authDomain: "mustaqil-ish-63c2c.firebaseapp.com",
@@ -101,113 +145,164 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let projectsMap = {};
+    let allProjects = [];
+    let allPurchases = [];
+    let adminCards = [];
+    let selectedCategory = 'all';
+    let base64Receipt = '';
 
-    function saveProject(e) {
-      e.preventDefault();
-      const newProjRef = db.ref("projects").push();
-      newProjRef.set({
-        title: document.getElementById('pTitle').value,
-        category: document.getElementById('pCategory').value,
-        price: Number(document.getElementById('pPrice').value),
-        fileUrl: document.getElementById('pFileUrl').value,
-        demoUrl: document.getElementById('pDemoUrl').value,
-        description: document.getElementById('pDesc').value,
-        createdAt: Date.now()
-      }).then(() => {
-        alert("Loyiha yuklandi va e'lon qilindi!");
-        e.target.reset();
-      });
+    function getDeviceId() {
+      let devId = localStorage.getItem('app_device_id');
+      if (!devId) {
+        devId = 'dev_' + Math.random().toString(36).substring(2, 11);
+        localStorage.setItem('app_device_id', devId);
+      }
+      return devId;
     }
 
     db.ref("projects").on("value", snapshot => {
-      const container = document.getElementById('adminProjectsList');
-      container.innerHTML = '';
-      projectsMap = {};
       const data = snapshot.val();
-
-      if (data) {
-        Object.keys(data).forEach(key => {
-          const p = { id: key, ...data[key] };
-          projectsMap[key] = p;
-
-          container.innerHTML += `
-            <div class="bg-slate-900/90 p-3 rounded-2xl border border-slate-800/80 flex justify-between items-center text-xs">
-              <div>
-                <div class="font-bold text-white">${p.title}</div>
-                <div class="text-[10px] text-slate-400">${Number(p.price).toLocaleString()} UZS • ${p.category}</div>
-              </div>
-              <button onclick="deleteProject('${p.id}')" class="text-rose-400 hover:text-rose-300 p-2"><i class="fa-solid fa-trash-can"></i></button>
-            </div>
-          `;
-        });
-      }
+      allProjects = data ? Object.keys(data).map(k => ({ id: k, ...data[k] })) : [];
+      renderProjects();
     });
 
     db.ref("purchases").on("value", snapshot => {
-      const list = document.getElementById('requestsList');
-      list.innerHTML = '';
       const data = snapshot.val();
+      allPurchases = data ? Object.keys(data).map(k => ({ id: k, ...data[k] })) : [];
+      renderProjects();
+    });
 
-      let pendingCount = 0;
-      let totalRevenue = 0;
+    db.ref("settings/cards").on("value", snapshot => {
+      const data = snapshot.val();
+      adminCards = data ? Object.keys(data).map(k => ({ id: k, ...data[k] })) : [];
+    });
 
-      if (data) {
-        Object.keys(data).forEach(key => {
-          const req = { id: key, ...data[key] };
-          const p = projectsMap[req.projectId] || { title: 'Loyiha', price: 0 };
+    function setCategory(cat) {
+      selectedCategory = cat;
+      document.querySelectorAll('.cat-pill').forEach(btn => {
+        btn.classList.remove('bg-indigo-600', 'text-white');
+        btn.classList.add('bg-slate-900', 'text-slate-400');
+      });
+      event.target.classList.remove('bg-slate-900', 'text-slate-400');
+      event.target.classList.add('bg-indigo-600', 'text-white');
+      renderProjects();
+    }
 
-          if (req.status === 'pending') pendingCount++;
-          if (req.status === 'approved') totalRevenue += Number(p.price || 0);
+    function renderProjects() {
+      const list = document.getElementById('projectsList');
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const myDeviceId = getDeviceId();
+      list.innerHTML = '';
 
-          let statusBadge = req.status === 'pending' ? '<span class="text-amber-400">KUTILMOQDA</span>' : (req.status === 'approved' ? '<span class="text-emerald-400">TASDIQLANGAN</span>' : '<span class="text-rose-400">RAD ETILGAN</span>');
+      const filtered = allProjects.filter(p => {
+        const matchesCat = selectedCategory === 'all' || p.category === selectedCategory;
+        const matchesSearch = p.title.toLowerCase().includes(search) || (p.description && p.description.toLowerCase().includes(search));
+        return matchesCat && matchesSearch;
+      });
 
-          const receiptImgTag = req.receiptImage ? `
-            <a href="${req.receiptImage}" target="_blank" class="block mt-2">
-              <img src="${req.receiptImage}" class="w-full h-24 object-cover rounded-xl border border-slate-700/80">
-            </a>
-          ` : '';
+      if (filtered.length === 0) {
+        list.innerHTML = `<div class="text-center py-12 text-slate-500 text-xs">Hozircha mos loyihalar topilmadi.</div>`;
+        return;
+      }
 
-          list.innerHTML += `
-            <div class="bg-slate-900/90 p-4 rounded-2xl border border-slate-800/80 text-xs space-y-2">
-              <div class="flex justify-between items-start">
-                <div>
-                  <div class="font-bold text-white text-sm">${req.studentName}</div>
-                  <div class="text-slate-400 text-[11px]"><i class="fa-brands fa-telegram text-indigo-400"></i> ${req.studentContact}</div>
-                  <div class="text-indigo-300 font-semibold text-[11px] mt-1">${p.title} (${Number(p.price).toLocaleString()} UZS)</div>
-                </div>
-                <div class="text-[10px] font-bold">${statusBadge}</div>
+      filtered.forEach(p => {
+        const myPurchase = allPurchases.find(req => req.projectId === p.id && req.deviceId === myDeviceId);
+        let statusTag = '', actionBtn = '';
+
+        if (!myPurchase) {
+          actionBtn = `<button onclick="openPayment('${p.id}', '${p.title.replace(/'/g, "\\'")}', ${p.price})" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-2"><i class="fa-solid fa-cart-shopping"></i> Sotib olish (${Number(p.price).toLocaleString()} UZS)</button>`;
+        } else if (myPurchase.status === 'pending') {
+          statusTag = `<span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-md text-[10px] font-semibold">Kutilmoqda</span>`;
+          actionBtn = `<button disabled class="w-full bg-slate-800 text-amber-400/90 font-medium py-2.5 rounded-xl text-xs border border-amber-500/20">⏳ Admin to'lovni tekshirmoqda...</button>`;
+        } else if (myPurchase.status === 'approved') {
+          statusTag = `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-md text-[10px] font-semibold">Tasdiqlangan</span>`;
+          actionBtn = `<a href="${p.fileUrl}" download target="_blank" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30"><i class="fa-solid fa-download"></i> Faylni Yuklab Olish</a>`;
+        }
+
+        const demoBtn = (p.demoUrl && p.demoUrl.trim() !== "") ? `<a href="${p.demoUrl}" target="_blank" class="text-xs text-indigo-400 hover:underline flex items-center gap-1"><i class="fa-solid fa-eye"></i> Demo Ko'rish</a>` : '';
+
+        list.innerHTML += `
+          <div class="glass-card p-5 rounded-2xl relative">
+            <div class="flex justify-between items-center mb-2">
+              <span class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[10px] font-semibold px-2 py-0.5 rounded-md">${p.category || 'Loyiha'}</span>
+              ${statusTag}
+            </div>
+            <h3 class="text-sm font-bold text-white mb-1">${p.title}</h3>
+            <p class="text-xs text-slate-400 mb-4 leading-relaxed">${p.description || ''}</p>
+            <div class="flex items-center justify-between gap-2 mb-3">
+              ${demoBtn}
+              <span class="text-xs font-bold text-slate-200">${Number(p.price).toLocaleString()} UZS</span>
+            </div>
+            ${actionBtn}
+          </div>
+        `;
+      });
+    }
+
+    function encodeImageFileAsURL(element) {
+      let file = element.files[0];
+      let reader = new FileReader();
+      reader.onloadend = function() { base64Receipt = reader.result; }
+      reader.readAsDataURL(file);
+    }
+
+    function openPayment(id, title, price) {
+      document.getElementById('modalProjectId').value = id;
+      document.getElementById('requiredPrice').value = price;
+      document.getElementById('modalTitle').innerText = title;
+      document.getElementById('modalPrice').innerText = Number(price).toLocaleString() + " UZS";
+      
+      const cContainer = document.getElementById('cardsContainer');
+      cContainer.innerHTML = '';
+      if(adminCards.length === 0) {
+        cContainer.innerHTML = `<div class="text-xs text-rose-400 text-center">Admin hali karta qo'shmagan!</div>`;
+      } else {
+        adminCards.forEach(c => {
+          cContainer.innerHTML += `
+            <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl flex justify-between items-center text-xs">
+              <div>
+                <div class="font-mono font-bold text-white tracking-wider">${c.number}</div>
+                <div class="text-[10px] text-slate-400">${c.holder} (${c.bank})</div>
               </div>
-
-              ${receiptImgTag}
-
-              ${req.status === 'pending' ? `
-                <div class="flex gap-2 pt-2">
-                  <button onclick="updateStatus('${req.id}', 'approved')" class="flex-1 bg-emerald-600 hover:bg-emerald-500 py-2 rounded-xl text-white font-bold text-[11px] transition">
-                    <i class="fa-solid fa-check"></i> Ruxsat berish
-                  </button>
-                  <button onclick="updateStatus('${req.id}', 'rejected')" class="bg-rose-600/80 hover:bg-rose-600 px-3 py-2 rounded-xl text-white font-bold text-[11px] transition">
-                    <i class="fa-solid fa-xmark"></i> Rad etish
-                  </button>
-                </div>
-              ` : ''}
+              <button type="button" onclick="navigator.clipboard.writeText('${c.number}'); alert('Karta nusxalandi!')" class="bg-indigo-600 px-2.5 py-1 rounded-lg text-white"><i class="fa-regular fa-copy"></i></button>
             </div>
           `;
         });
       }
-
-      document.getElementById('statPending').innerText = pendingCount;
-      document.getElementById('statRevenue').innerText = totalRevenue.toLocaleString() + " UZS";
-    });
-
-    function updateStatus(id, status) {
-      db.ref("purchases/" + id).update({ status });
+      document.getElementById('paymentModal').classList.remove('hidden');
     }
 
-    function deleteProject(id) {
-      if (confirm("Ushbu loyihani o'chirishga ishonchingiz komilmi?")) {
-        db.ref("projects/" + id).remove();
+    function closeModal() { document.getElementById('paymentModal').classList.add('hidden'); }
+
+    function submitPayment(e) {
+      e.preventDefault();
+      const requiredPrice = Number(document.getElementById('requiredPrice').value);
+      const paidAmount = Number(document.getElementById('paidAmount').value);
+
+      if(paidAmount < requiredPrice) {
+        alert("Xatolik! Kiritilgan to'lov summasi loyiha narxidan kam. Iltimos, to'g'ri summani kiriting.");
+        return;
       }
+
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.innerText = "Yuborilmoqda...";
+
+      db.ref("purchases").push().set({
+        projectId: document.getElementById('modalProjectId').value,
+        studentName: document.getElementById('studentName').value,
+        studentContact: document.getElementById('studentContact').value,
+        paidAmount: paidAmount,
+        receiptImage: base64Receipt,
+        deviceId: getDeviceId(),
+        status: 'pending',
+        createdAt: Date.now()
+      }).then(() => {
+        alert("To'lov cheki yuborildi! Admin tasdiqlashi bilan yuklab olish tugmasi ochiladi.");
+        closeModal();
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Chekni Yuborish`;
+      });
     }
   </script>
 </body>
