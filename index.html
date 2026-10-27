@@ -3,51 +3,95 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Panel - Global</title>
+  <title>PRO Admin Control Panel</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
-  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
   <style>
-    body { background-color: #090d16; color: #f8fafc; font-family: sans-serif; }
-    .glass { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+    body { background-color: #070a12; color: #f8fafc; font-family: 'Inter', sans-serif; }
+    .glass-box { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
   </style>
 </head>
-<body class="pb-12">
+<body class="pb-16">
 
-  <header class="sticky top-0 z-40 glass px-4 py-4 flex justify-between items-center border-b border-slate-800">
+  <!-- Header -->
+  <header class="sticky top-0 z-40 glass-box px-4 py-4 flex justify-between items-center border-b border-slate-800">
     <div class="flex items-center space-x-2">
-      <span class="bg-emerald-500/20 text-emerald-400 p-2 rounded-xl"><i class="fa-solid fa-user-shield text-lg"></i></span>
-      <h1 class="text-base font-bold text-white">Global Admin Panel</h1>
+      <span class="bg-indigo-600/20 text-indigo-400 p-2 rounded-xl border border-indigo-500/20">
+        <i class="fa-solid fa-shield-halved text-lg"></i>
+      </span>
+      <div>
+        <h1 class="text-sm font-bold text-white leading-tight">Admin Control Panel</h1>
+        <p class="text-[10px] text-slate-400">EduProjects Tizimi</p>
+      </div>
     </div>
   </header>
 
   <main class="max-w-md mx-auto px-4 mt-6 space-y-6">
-    <!-- Loyiha qo'shish -->
-    <div class="glass p-5 rounded-3xl border border-slate-800">
-      <h2 class="text-sm font-bold text-white mb-4"><i class="fa-solid fa-plus text-indigo-400 mr-2"></i> Yangi Loyiha Qo'shish</h2>
-      <form onsubmit="addProject(event)" class="space-y-3">
-        <input type="text" id="pTitle" required placeholder="Loyiha Nomi" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+
+    <!-- Analytics Dashboard -->
+    <div class="grid grid-cols-2 gap-3">
+      <div class="glass-box p-4 rounded-2xl border border-slate-800">
+        <div class="text-[10px] text-slate-400 uppercase font-semibold">Tushgan So'rovlar</div>
+        <div class="text-xl font-extrabold text-white mt-1" id="statPending">0</div>
+      </div>
+      <div class="glass-box p-4 rounded-2xl border border-slate-800">
+        <div class="text-[10px] text-emerald-400 uppercase font-semibold">Jami Daromad</div>
+        <div class="text-lg font-extrabold text-emerald-400 mt-1" id="statRevenue">0 UZS</div>
+      </div>
+    </div>
+
+    <!-- 1. YANGI LOYIHA QO'SHISH -->
+    <div class="glass-box p-5 rounded-3xl border border-slate-800 shadow-2xl">
+      <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
+        <i class="fa-solid fa-plus-circle text-indigo-400 text-sm"></i> Yangi Loyiha Qo'shish
+      </h2>
+      <form onsubmit="saveProject(event)" class="space-y-3">
+        <input type="text" id="pTitle" required placeholder="Loyiha Nomi" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+        
         <div class="grid grid-cols-2 gap-2">
-          <input type="text" id="pCategory" placeholder="Kategoriya (Masalan: Veb-sayt)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
-          <input type="number" id="pPrice" required placeholder="Narxi (UZS)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+          <select id="pCategory" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-2 py-2.5 text-xs text-white focus:outline-none">
+            <option value="Mustaqil ish">Mustaqil ish</option>
+            <option value="Veb-sayt">Veb-sayt</option>
+            <option value="Kurs ishi">Kurs ishi</option>
+          </select>
+          <input type="number" id="pPrice" required placeholder="Narxi (UZS)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
         </div>
-        <input type="url" id="pFileUrl" required placeholder="Fayl havolasi (Google Drive / Telegram link)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
-        <textarea id="pDesc" rows="2" placeholder="Tavsif" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"></textarea>
-        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 rounded-xl text-xs transition">Barchaga E'lon Qilish</button>
+
+        <input type="url" id="pFileUrl" required placeholder="Fayl Linki (Google Drive / Telegram)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+        <input type="url" id="pDemoUrl" placeholder="Demo Link (Veb-sayt bo'lsa)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+        
+        <textarea id="pDesc" rows="2" placeholder="Batafsil tavsif..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"></textarea>
+
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl text-xs transition shadow-lg shadow-indigo-600/30">
+          Barchaga E'lon Qilish
+        </button>
       </form>
     </div>
 
-    <!-- Kelib tushgan to'lovlar -->
-    <div class="glass p-5 rounded-3xl border border-slate-800">
-      <h2 class="text-sm font-bold text-white mb-4"><i class="fa-solid fa-clock-rotate-left text-amber-400 mr-2"></i> To'lov So'rovlari</h2>
+    <!-- 2. TO'LOV SO'ROVLARI VA CHEKLAR -->
+    <div class="glass-box p-5 rounded-3xl border border-slate-800">
+      <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
+        <i class="fa-solid fa-receipt text-amber-400 text-sm"></i> Kelib Tushgan To'lovlar
+      </h2>
       <div id="requestsList" class="space-y-3">
-        <div class="text-center text-slate-500 text-xs">Yuklanmoqda...</div>
+        <div class="text-center text-slate-500 text-xs py-4">Yuklanmoqda...</div>
       </div>
     </div>
+
+    <!-- 3. MAVJUD LOYIHALARNI BOSHQARISH -->
+    <div class="glass-box p-5 rounded-3xl border border-slate-800">
+      <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
+        <i class="fa-solid fa-folder-open text-indigo-400 text-sm"></i> Barcha Loyihalar
+      </h2>
+      <div id="adminProjectsList" class="space-y-3">
+        <!-- JS -->
+      </div>
+    </div>
+
   </main>
 
   <script>
@@ -62,54 +106,108 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    function addProject(e) {
+    let projectsMap = {};
+
+    function saveProject(e) {
       e.preventDefault();
       db.collection("projects").add({
         title: document.getElementById('pTitle').value,
         category: document.getElementById('pCategory').value,
         price: Number(document.getElementById('pPrice').value),
         fileUrl: document.getElementById('pFileUrl').value,
+        demoUrl: document.getElementById('pDemoUrl').value,
         description: document.getElementById('pDesc').value,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       }).then(() => {
-        alert("Loyiha butun dunyo uchun e'lon qilindi!");
+        alert("Loyiha yuklandi va e'lon qilindi!");
         e.target.reset();
       });
     }
 
-    // To'lovlarni real-time kuzatish
-    db.collection("purchases").onSnapshot((snapshot) => {
-      const reqList = document.getElementById('requestsList');
-      reqList.innerHTML = '';
-      let docs = [];
-      snapshot.forEach(doc => docs.push({ id: doc.id, ...doc.data() }));
+    // Live Loyihalarni Kuzatish
+    db.collection("projects").onSnapshot(snapshot => {
+      const container = document.getElementById('adminProjectsList');
+      container.innerHTML = '';
+      projectsMap = {};
 
-      if (docs.length === 0) {
-        reqList.innerHTML = `<div class="text-center py-4 text-slate-500 text-xs">Hozircha so'rovlar yo'q.</div>`;
-        return;
-      }
+      snapshot.docs.forEach(doc => {
+        const p = { id: doc.id, ...doc.data() };
+        projectsMap[doc.id] = p;
 
-      docs.forEach(req => {
-        let statusColor = req.status === 'pending' ? 'text-amber-400' : (req.status === 'approved' ? 'text-emerald-400' : 'text-rose-400');
-        reqList.innerHTML += `
-          <div class="bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800 text-xs flex justify-between items-center">
+        container.innerHTML += `
+          <div class="bg-slate-900/90 p-3 rounded-2xl border border-slate-800/80 flex justify-between items-center text-xs">
             <div>
-              <div class="font-bold text-white">${req.studentName}</div>
-              <div class="text-[10px] ${statusColor} font-semibold mt-1">Holat: ${req.status.toUpperCase()}</div>
+              <div class="font-bold text-white">${p.title}</div>
+              <div class="text-[10px] text-slate-400">${Number(p.price).toLocaleString()} UZS • ${p.category}</div>
             </div>
-            ${req.status === 'pending' ? `
-              <div class="flex space-x-1">
-                <button onclick="updateStatus('${req.id}', 'approved')" class="bg-emerald-600 px-3 py-1.5 rounded-lg text-white font-semibold text-[11px]">Ruxsat</button>
-                <button onclick="updateStatus('${req.id}', 'rejected')" class="bg-rose-600 px-2 py-1.5 rounded-lg text-white font-semibold text-[11px]">Rad</button>
-              </div>
-            ` : ''}
+            <button onclick="deleteProject('${p.id}')" class="text-rose-400 hover:text-rose-300 p-2"><i class="fa-solid fa-trash-can"></i></button>
           </div>
         `;
       });
     });
 
-    function updateStatus(id, newStatus) {
-      db.collection("purchases").doc(id).update({ status: newStatus });
+    // Live To'lovlarni Kuzatish
+    db.collection("purchases").onSnapshot(snapshot => {
+      const list = document.getElementById('requestsList');
+      list.innerHTML = '';
+
+      let pendingCount = 0;
+      let totalRevenue = 0;
+
+      snapshot.docs.forEach(doc => {
+        const req = { id: doc.id, ...doc.data() };
+        const p = projectsMap[req.projectId] || { title: 'Loyiha', price: 0 };
+
+        if (req.status === 'pending') pendingCount++;
+        if (req.status === 'approved') totalRevenue += Number(p.price || 0);
+
+        let statusBadge = req.status === 'pending' ? '<span class="text-amber-400">KUTILMOQDA</span>' : (req.status === 'approved' ? '<span class="text-emerald-400">TASDIQLANGAN</span>' : '<span class="text-rose-400">RAD ETILGAN</span>');
+
+        const receiptImgTag = req.receiptImage ? `
+          <a href="${req.receiptImage}" target="_blank" class="block mt-2">
+            <img src="${req.receiptImage}" class="w-full h-24 object-cover rounded-xl border border-slate-700/80">
+          </a>
+        ` : '';
+
+        list.innerHTML += `
+          <div class="bg-slate-900/90 p-4 rounded-2xl border border-slate-800/80 text-xs space-y-2">
+            <div class="flex justify-between items-start">
+              <div>
+                <div class="font-bold text-white text-sm">${req.studentName}</div>
+                <div class="text-slate-400 text-[11px]"><i class="fa-brands fa-telegram text-indigo-400"></i> ${req.studentContact}</div>
+                <div class="text-indigo-300 font-semibold text-[11px] mt-1">${p.title} (${Number(p.price).toLocaleString()} UZS)</div>
+              </div>
+              <div class="text-[10px] font-bold">${statusBadge}</div>
+            </div>
+
+            ${receiptImgTag}
+
+            ${req.status === 'pending' ? `
+              <div class="flex gap-2 pt-2">
+                <button onclick="updateStatus('${req.id}', 'approved')" class="flex-1 bg-emerald-600 hover:bg-emerald-500 py-2 rounded-xl text-white font-bold text-[11px] transition">
+                  <i class="fa-solid fa-check"></i> Ruxsat berish
+                </button>
+                <button onclick="updateStatus('${req.id}', 'rejected')" class="bg-rose-600/80 hover:bg-rose-600 px-3 py-2 rounded-xl text-white font-bold text-[11px] transition">
+                  <i class="fa-solid fa-xmark"></i> Rad etish
+                </button>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      });
+
+      document.getElementById('statPending').innerText = pendingCount;
+      document.getElementById('statRevenue').innerText = totalRevenue.toLocaleString() + " UZS";
+    });
+
+    function updateStatus(id, status) {
+      db.collection("purchases").doc(id).update({ status });
+    }
+
+    function deleteProject(id) {
+      if (confirm("Ushbu loyihani o'chirishga ishonchingiz komilmi?")) {
+        db.collection("projects").doc(id).delete();
+      }
     }
   </script>
 </body>
