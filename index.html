@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O'qituvchi Kabineti | Ekotizim</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <div class="max-w-4xl mx-auto p-6">
+        <!-- Header -->
+        <header class="bg-white shadow-md rounded-xl p-6 mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">👨‍🏫 O'qituvchi Kabineti</h1>
+            <p class="text-gray-600">Guruhlarga mustaqil ish berish va talabalar natijalarini tekshirish.</p>
+        </header>
+
+        <!-- Guruhni tanlash -->
+        <div class="bg-white shadow-md rounded-xl p-6 mb-6">
+            <label class="block text-gray-700 font-semibold mb-2">O'qitish guruhini tanlang:</label>
+            <select id="groupSelect" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="renderStudents()">
+                <option value="F-KI-101-25">F-KI-101-25</option>
+                <option value="F-KI-102-25">F-KI-102-25</option>
+            </select>
+        </div>
+
+        <!-- Talabalar ro'yxati -->
+        <div class="bg-white shadow-md rounded-xl p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">👥 Talabalar ro'yxati va ishlari</h2>
+            <div id="studentList" class="divide-y divide-gray-200">
+                <!-- JavaScript orqali to'ldiriladi -->
+            </div>
+        </div>
+
+        <!-- Yangi topshiriq berish -->
+        <div class="bg-white shadow-md rounded-xl p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">📝 Guruhga Yangi Mustaqil Ish Berish</h2>
+            <div class="mb-4">
+                <label class="block text-gray-700 font-semibold mb-2">Topshiriq mavzusi:</label>
+                <input type="text" id="taskTitle" placeholder="Masalan: Web dasturlash asoslari mustaqil ishi" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 font-semibold mb-2">Topshirish muddati:</label>
+                <input type="date" id="taskDeadline" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <button onclick="assignTask()" class="bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg hover:bg-blue-700 transition">Topshiriqni yuborish</button>
+            <p id="successMsg" class="text-green-600 mt-3 hidden">Topshiriq guruhga muvaffaqiyatli yuborildi!</p>
+        </div>
+    </div>
+
+    <script>
+        // Simulyatsiya qilingan baza
+        const studentsData = [
+            { id: 1, name: "Alisherov B.", group: "F-KI-101-25", status: "Topshirilmagan" },
+            { id: 2, name: "Karimova Z.", group: "F-KI-101-25", status: "Topshirilgan" },
+            { id: 3, name: "Tohirov M.", group: "F-KI-102-25", status: "Topshirilmagan" }
+        ];
+
+        function renderStudents() {
+            const selectedGroup = document.getElementById('groupSelect').value;
+            const container = document.getElementById('studentList');
+            container.innerHTML = '';
+
+            const filtered = studentsData.filter(s => s.group === selectedGroup);
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 py-3">Bu guruhda talabalar yo\'q.</p>';
+                return;
+            }
+
+            filtered.forEach(student => {
+                const row = document.createElement('div');
+                row.className = 'py-3 flex justify-between items-center';
+                row.innerHTML = `
+                    <div>
+                        <span class="font-medium text-gray-800">${student.name}</span>
+                        <span class="ml-4 text-sm px-2 py-1 rounded ${student.status === 'Topshirilgan' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">${student.status}</span>
+                    </div>
+                    <button onclick="evaluateStudent(${student.id})" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700 transition">Baholash</button>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function evaluateStudent(id) {
+            const student = studentsData.find(s => s.id === id);
+            if (student) {
+                student.status = "Baholandi";
+                alert(`${student.name} ning ishi qabul qilindi va baho qo'yildi!`);
+                renderStudents();
+            }
+        }
+
+        function assignTask() {
+            const title = document.getElementById('taskTitle').value;
+            const deadline = document.getElementById('taskDeadline').value;
+            if (title && deadline) {
+                const msg = document.getElementById('successMsg');
+                msg.classList.remove('hidden');
+                setTimeout(() => msg.classList.add('hidden'), 3000);
+                document.getElementById('taskTitle').value = '';
+            } else {
+                alert("Iltimos, barcha maydonlarni to'ldiring!");
+            }
+        }
+
+        // Boshlang'ich yuklash
+        renderStudents();
+    </script>
+</body>
+</html>
