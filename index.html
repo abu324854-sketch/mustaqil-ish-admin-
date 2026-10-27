@@ -13,6 +13,7 @@
   <style>
     body { background-color: #070a12; color: #f8fafc; font-family: sans-serif; }
     .glass-box { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    .drop-zone--over { border-color: #6366f1 !important; background-color: rgba(99, 102, 241, 0.1) !important; }
   </style>
 </head>
 <body class="pb-16">
@@ -31,6 +32,7 @@
 
   <main class="max-w-md mx-auto px-4 mt-6 space-y-6">
 
+    <!-- Analytics Dashboard -->
     <div class="grid grid-cols-2 gap-3">
       <div class="glass-box p-4 rounded-2xl border border-slate-800">
         <div class="text-[10px] text-slate-400 uppercase font-semibold">Tushgan So'rovlar</div>
@@ -42,7 +44,7 @@
       </div>
     </div>
 
-    <!-- NASTROYKA: Karta Qo'shish -->
+    <!-- NASTROYKA: Karta Raqamlar -->
     <div class="glass-box p-5 rounded-3xl border border-slate-800">
       <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
         <i class="fa-solid fa-credit-card text-emerald-400 text-sm"></i> Nastroyka: Karta Raqamlar Qo'shish
@@ -60,7 +62,7 @@
       <div id="adminCardsList" class="mt-3 space-y-2"></div>
     </div>
 
-    <!-- YANGI LOYIHA QO'SHISH -->
+    <!-- YANGI LOYIHA QO'SHISH (FAYL YUKLASH BILAN) -->
     <div class="glass-box p-5 rounded-3xl border border-slate-800 shadow-2xl">
       <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
         <i class="fa-solid fa-plus-circle text-indigo-400 text-sm"></i> Yangi Loyiha Qo'shish
@@ -77,15 +79,36 @@
           <input type="number" id="pPrice" required placeholder="Narxi (UZS)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none">
         </div>
 
-        <input type="url" id="pFileUrl" required placeholder="Fayl Linki (Google Drive / Telegram)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none">
-        <input type="url" id="pDemoUrl" placeholder="Demo Link (Majburiy emas, bo'sh qoldirishingiz mumkin)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none">
+        <!-- FAYL YUKLASH ZONASI (Drag & Drop, Ctrl+V, File picker) -->
+        <div>
+          <label class="block text-[11px] text-slate-400 mb-1">Faylni Yuklang (Fayllardan tanlang, Ctrl+V bosing yoki tashlang):</label>
+          <div id="dropZone" class="border-2 border-dashed border-slate-700 bg-slate-900/60 rounded-2xl p-4 text-center cursor-pointer hover:border-indigo-500 transition relative">
+            <i class="fa-solid fa-cloud-arrow-up text-2xl text-indigo-400 mb-1"></i>
+            <p class="text-[11px] text-slate-300 font-semibold" id="fileStatusText">Faylni bosib tanlang yoki shu yerga tashlang (Ctrl+V)</p>
+            <span class="text-[9px] text-slate-500">.zip, .docx, .pdf, .pptx, .rar</span>
+            <input type="file" id="fileInput" onchange="handleFileSelect(this.files[0])" class="absolute inset-0 opacity-0 cursor-pointer">
+          </div>
+        </div>
+
+        <input type="url" id="pFileUrl" placeholder="Yoki Fayl Linki (Google Drive / Telegram)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none">
+        <input type="url" id="pDemoUrl" placeholder="Demo Link (Majburiy emas)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none">
         
         <textarea id="pDesc" rows="2" placeholder="Batafsil tavsif..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"></textarea>
 
-        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl text-xs transition shadow-lg shadow-indigo-600/30">
+        <button type="submit" id="projSubmitBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl text-xs transition shadow-lg shadow-indigo-600/30">
           Barchaga E'lon Qilish
         </button>
       </form>
+    </div>
+
+    <!-- TALABALARDAN KELGAN BUYURTMALAR (ZAKAZLAR) -->
+    <div class="glass-box p-5 rounded-3xl border border-slate-800">
+      <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
+        <i class="fa-solid fa-list-check text-purple-400 text-sm"></i> Talabalar Zakazlari (Buyurtmalar)
+      </h2>
+      <div id="ordersList" class="space-y-3">
+        <div class="text-center text-slate-500 text-xs py-2">Yuklanmoqda...</div>
+      </div>
     </div>
 
     <!-- TO'LOV SO'ROVLARI -->
@@ -122,6 +145,45 @@
     const db = firebase.database();
 
     let projectsMap = {};
+    let uploadedFileData = null;
+    let uploadedFileName = "";
+
+    // Drag & Drop hamda Paste (Ctrl+V) fayl yuklash hodisalari
+    const dropZone = document.getElementById('dropZone');
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropZone.addEventListener(eventName, (e) => { e.preventDefault(); dropZone.classList.add('drop-zone--over'); }, false);
+    });
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, (e) => { e.preventDefault(); dropZone.classList.remove('drop-zone--over'); }, false);
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      const files = e.dataTransfer.files;
+      if (files.length) handleFileSelect(files[0]);
+    });
+
+    document.addEventListener('paste', (e) => {
+      const items = e.clipboardData.items;
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].kind === 'file') {
+          handleFileSelect(items[i].getAsFile());
+          break;
+        }
+      }
+    });
+
+    function handleFileSelect(file) {
+      if (!file) return;
+      uploadedFileName = file.name;
+      document.getElementById('fileStatusText').innerHTML = `<span class="text-emerald-400 font-bold"><i class="fa-solid fa-circle-check"></i> ${file.name}</span> yuklandi!`;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        uploadedFileData = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
 
     function saveCard(e) {
       e.preventDefault();
@@ -154,19 +216,56 @@
 
     function saveProject(e) {
       e.preventDefault();
+      const btn = document.getElementById('projSubmitBtn');
+      btn.disabled = true;
+      btn.innerText = "E'lon qilinmoqda...";
+
       db.ref("projects").push().set({
         title: document.getElementById('pTitle').value,
         category: document.getElementById('pCategory').value,
         price: Number(document.getElementById('pPrice').value),
-        fileUrl: document.getElementById('pFileUrl').value,
-        demoUrl: document.getElementById('pDemoUrl').value,
+        fileData: uploadedFileData || null,
+        fileName: uploadedFileName || null,
+        fileUrl: document.getElementById('pFileUrl').value || null,
+        demoUrl: document.getElementById('pDemoUrl').value || null,
         description: document.getElementById('pDesc').value,
         createdAt: Date.now()
       }).then(() => {
         alert("Loyiha yuklandi va e'lon qilindi!");
         e.target.reset();
+        uploadedFileData = null;
+        uploadedFileName = "";
+        document.getElementById('fileStatusText').innerText = "Faylni bosib tanlang yoki shu yerga tashlang (Ctrl+V)";
+        btn.disabled = false;
+        btn.innerText = "Barchaga E'lon Qilish";
       });
     }
+
+    // Zakazlarni Kuzatish
+    db.ref("orders").on("value", snapshot => {
+      const container = document.getElementById('ordersList');
+      container.innerHTML = '';
+      const data = snapshot.val();
+
+      if (!data) {
+        container.innerHTML = `<div class="text-center py-2 text-slate-500 text-xs">Hozircha zakazlar yo'q.</div>`;
+        return;
+      }
+
+      Object.keys(data).forEach(k => {
+        const ord = data[k];
+        container.innerHTML += `
+          <div class="bg-slate-900 p-3.5 rounded-2xl border border-slate-800 text-xs relative">
+            <div class="flex justify-between items-start mb-1">
+              <span class="font-bold text-white text-sm">${ord.studentName}</span>
+              <button onclick="db.ref('orders/${k}').remove()" class="text-slate-500 hover:text-rose-400"><i class="fa-solid fa-trash"></i></button>
+            </div>
+            <div class="text-indigo-400 text-[11px] font-medium mb-2"><i class="fa-brands fa-telegram"></i> ${ord.studentContact}</div>
+            <p class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-slate-300 text-[11px] leading-relaxed">${ord.topic}</p>
+          </div>
+        `;
+      });
+    });
 
     db.ref("projects").on("value", snapshot => {
       const container = document.getElementById('adminProjectsList');
