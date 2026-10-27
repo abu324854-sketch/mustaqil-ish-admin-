@@ -7,8 +7,9 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   
+  <!-- Firebase SDK (Realtime Database uchun) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
   <style>
     body { background-color: #0b0f19; color: #f8fafc; font-family: sans-serif; }
@@ -107,18 +108,17 @@
   </div>
 
   <script>
-    // Вставлен ваш firebaseConfig со скриншота!
     const firebaseConfig = {
       apiKey: "AIzaSyDMmB0tW-JGizWSOdlFJJd68p6sksrlS_8",
       authDomain: "mustaqil-ish-63c2c.firebaseapp.com",
       projectId: "mustaqil-ish-63c2c",
+      databaseURL: "https://mustaqil-ish-63c2c-default-rtdb.firebaseio.com",
       storageBucket: "mustaqil-ish-63c2c.firebasestorage.app",
       messagingSenderId: "577427329404",
-      appId: "1:577427329404:web:e3ac004474ff1c9d5454f9",
-      measurementId: "G-CMJY37P0L0"
+      appId: "1:577427329404:web:e3ac004474ff1c9d5454f9"
     };
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    const db = firebase.database();
 
     let allProjects = [];
     let allPurchases = [];
@@ -134,13 +134,26 @@
       return devId;
     }
 
-    db.collection("projects").onSnapshot(snapshot => {
-      allProjects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Realtime Database listeners
+    db.ref("projects").on("value", snapshot => {
+      const data = snapshot.val();
+      allProjects = [];
+      if (data) {
+        Object.keys(data).forEach(key => {
+          allProjects.push({ id: key, ...data[key] });
+        });
+      }
       renderProjects();
     });
 
-    db.collection("purchases").onSnapshot(snapshot => {
-      allPurchases = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    db.ref("purchases").on("value", snapshot => {
+      const data = snapshot.val();
+      allPurchases = [];
+      if (data) {
+        Object.keys(data).forEach(key => {
+          allPurchases.push({ id: key, ...data[key] });
+        });
+      }
       renderProjects();
     });
 
@@ -252,14 +265,15 @@
       btn.disabled = true;
       btn.innerText = "Yuborilmoqda...";
 
-      db.collection("purchases").add({
+      const newPurchaseRef = db.ref("purchases").push();
+      newPurchaseRef.set({
         projectId: document.getElementById('modalProjectId').value,
         studentName: document.getElementById('studentName').value,
         studentContact: document.getElementById('studentContact').value,
         receiptImage: base64Receipt,
         deviceId: getDeviceId(),
         status: 'pending',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        createdAt: Date.now()
       }).then(() => {
         alert("To'lov cheki yuborildi! Admin tasdiqlashi bilan yuklab olish tugmasi ochiladi.");
         closeModal();
