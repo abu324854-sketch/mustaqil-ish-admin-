@@ -1,302 +1,406 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="robots" content="noindex">
-<title>PRO Admin Control Panel</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-<style>
-body { background-color: #070a12; color: #f8fafc; font-family: sans-serif; }
-.glass-box { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PRO Admin Control Panel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <style>
+    body { background-color: #070a12; color: #f8fafc; font-family: sans-serif; }
+    .glass-box { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    .drop-zone--over { border-color: #6366f1 !important; background-color: rgba(99, 102, 241, 0.1) !important; }
+  </style>
 </head>
 <body class="pb-16">
-
-<!-- Kirish -->
-<div id="loginView" class="hidden min-h-screen flex items-center justify-center p-4">
-  <form onsubmit="login(event)" class="glass-box w-full max-w-sm p-6 rounded-3xl space-y-3">
-    <h1 class="text-sm font-bold text-white"><i class="fa-solid fa-shield-halved text-indigo-400"></i> Admin kirish</h1>
-    <input type="password" id="loginPass" required autofocus placeholder="Parol" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none">
-    <p id="loginErr" class="text-[11px] text-rose-400 hidden">Parol noto'g'ri</p>
-    <button class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-xs">Kirish</button>
-  </form>
-</div>
-
-<div id="appView" class="hidden">
-<header class="sticky top-0 z-40 glass-box px-4 py-4 flex justify-between items-center border-b border-slate-800">
-  <div class="flex items-center space-x-2">
-    <span class="bg-indigo-600/20 text-indigo-400 p-2 rounded-xl border border-indigo-500/20"><i class="fa-solid fa-shield-halved text-lg"></i></span>
-    <div>
-      <h1 class="text-sm font-bold text-white leading-tight">Admin Control Panel</h1>
-      <p class="text-[10px] text-slate-400">EduProjects Tizimi (Boshqaruv)</p>
+  <header class="sticky top-0 z-40 glass-box px-4 py-4 flex justify-between items-center border-b border-slate-800">
+    <div class="flex items-center space-x-2">
+      <span class="bg-indigo-600/20 text-indigo-400 p-2 rounded-xl border border-indigo-500/20">
+        <i class="fa-solid fa-shield-halved text-lg"></i>
+      </span>
+      <div>
+        <h1 class="text-sm font-bold text-white leading-tight">Admin Control Panel</h1>
+        <p class="text-[10px] text-slate-400">EduProjects Tizimi (Boshqaruv)</p>
+      </div>
     </div>
-  </div>
-  <button onclick="logout()" class="text-slate-400 hover:text-white text-xs"><i class="fa-solid fa-right-from-bracket"></i> Chiqish</button>
-</header>
+  </header>
 
-<main class="max-w-md mx-auto px-4 mt-6 space-y-6">
-  <div class="grid grid-cols-3 gap-3">
-    <div class="glass-box p-3 rounded-2xl">
-      <div class="text-[10px] text-slate-400 uppercase font-semibold">Zakazlar</div>
-      <div class="text-xl font-extrabold text-white mt-1" id="statRequests">0</div>
+  <main class="max-w-md mx-auto px-4 mt-6 space-y-6">
+    <!-- Analytics Dashboard -->
+    <div class="grid grid-cols-2 gap-3">
+      <div class="glass-box p-4 rounded-2xl border border-slate-800">
+        <div class="text-[10px] text-slate-400 uppercase font-semibold">Tushgan So'rovlar</div>
+        <div class="text-xl font-extrabold text-white mt-1" id="statPending">0</div>
+      </div>
+      <div class="glass-box p-4 rounded-2xl border border-slate-800">
+        <div class="text-[10px] text-emerald-400 uppercase font-semibold">Jami Daromad</div>
+        <div class="text-lg font-extrabold text-emerald-400 mt-1" id="statRevenue">0 UZS</div>
+      </div>
     </div>
-    <div class="glass-box p-3 rounded-2xl">
-      <div class="text-[10px] text-slate-400 uppercase font-semibold">Sotuvlar</div>
-      <div class="text-xl font-extrabold text-white mt-1" id="statSales">0</div>
-    </div>
-    <div class="glass-box p-3 rounded-2xl">
-      <div class="text-[10px] text-emerald-400 uppercase font-semibold">Daromad</div>
-      <div class="text-sm font-extrabold text-emerald-400 mt-1" id="statRevenue">0 UZS</div>
-    </div>
-  </div>
 
-  <!-- Yangi loyiha -->
-  <div class="glass-box p-5 rounded-3xl shadow-2xl">
-    <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider"><i class="fa-solid fa-plus-circle text-indigo-400 text-sm"></i> Yangi Loyiha Qo'shish</h2>
-    <form onsubmit="saveProject(event)" class="space-y-3">
-      <input type="text" id="pTitle" required placeholder="Loyiha Nomi" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none">
+    <!-- NASTROYKA: Karta Raqamlar -->
+    <div class="glass-box p-5 rounded-3xl border border-slate-800">
+      <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
+        <i class="fa-solid fa-credit-card text-emerald-400 text-sm"></i> Nastroyka: Karta Raqamlar Qo'shish
+      </h2>
+      <form onsubmit="saveCard(event)" class="space-y-3">
+        <input type="text" id="cNumber" required placeholder="Karta raqami (8600 ...)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+        <div class="grid grid-cols-2 gap-2">
+          <input type="text" id="cHolder" required placeholder="F.I.O (Masalan: Fattoxov A.)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+          <input type="text" id="cBank" required placeholder="Bank nomi (Uzcard/Humo)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+        </div>
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs transition">
+          Karta Qo'shish
+        </button>
+      </form>
+      <div id="adminCardsList" class="mt-3 space-y-2"></div>
+    </div>
+
+    <!-- YANGI LOYIHA QO'SHISH -->
+    <div class="glass-box p-5 rounded-3xl border border-slate-800 shadow-2xl">
+      <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
+        <i class="fa-solid fa-plus-circle text-indigo-400 text-sm"></i> Yangi Loyiha Qo'shish
+      </h2>
+      <form onsubmit="saveProject(event)" class="space-y-3">
+        <input type="text" id="pTitle" required placeholder="Loyiha Nomi" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none">
+        
+        <div class="grid grid-cols-2 gap-2">
+          <select id="pCategory" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-2 py-2.5 text-xs text-white focus:outline-none">
+            <option value="Mustaqil ish">Mustaqil ish</option>
+            <option value="Veb-sayt">Veb-sayt</option>
+            <option value="Kurs ishi">Kurs ishi</option>
+          </select>
+          <input type="number" id="pPrice" required placeholder="Narxi (UZS)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-[11px] text-slate-400 mb-1">Faylni Yuklang (Fayllardan tanlang, Ctrl+V bosing yoki tashlang):</label>
+          <div id="dropZone" class="border-2 border-dashed border-slate-700 bg-slate-900/60 rounded-2xl p-4 text-center cursor-pointer hover:border-indigo-500 transition relative">
+            <i class="fa-solid fa-cloud-arrow-up text-2xl text-indigo-400 mb-1"></i>
+            <p class="text-[11px] text-slate-300 font-semibold" id="fileStatusText">Faylni bosib tanlang yoki shu yerga tashlang (Ctrl+V)</p>
+            <span class="text-[9px] text-slate-500">.zip, .docx, .pdf, .pptx, .rar</span>
+            <input type="file" id="fileInput" onchange="handleFileSelect(this.files[0])" class="absolute inset-0 opacity-0 cursor-pointer">
+          </div>
+        </div>
+        
+        <input type="url" id="pFileUrl" placeholder="Yoki Fayl Linki (Google Drive / Telegram)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none">
+        <input type="url" id="pDemoUrl" placeholder="Demo Link (Majburiy emas)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none">
+        <textarea id="pDesc" rows="2" placeholder="Batafsil tavsif..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"></textarea>
+
+        <button type="submit" id="projSubmitBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl text-xs transition shadow-lg shadow-indigo-600/30">
+          Barchaga E'lon Qilish
+        </button>
+      </form>
+    </div>
+
+    <!-- TALABALARDAN KELGAN BUYURTMALAR -->
+    <div class="glass-box p-5 rounded-3xl border border-slate-800">
+      <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
+        <i class="fa-solid fa-list-check text-purple-400 text-sm"></i> Talabalar Zakazlari (Buyurtmalar)
+      </h2>
+      <div id="ordersList" class="space-y-3">
+        <div class="text-center text-slate-500 text-xs py-2">Yuklanmoqda...</div>
+      </div>
+    </div>
+
+    <!-- TO'LOV SO'ROVLARI VA RUXSATLARNI BOSHQARISH -->
+    <div class="glass-box p-5 rounded-3xl border border-slate-800">
+      <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
+        <i class="fa-solid fa-receipt text-amber-400 text-sm"></i> Kelib Tushgan To'lovlar va Ruxsatlar
+      </h2>
+      <div id="requestsList" class="space-y-3">
+        <div class="text-center text-slate-500 text-xs py-4">Yuklanmoqda...</div>
+      </div>
+    </div>
+
+    <!-- MAVJUD LOYIHA VA TAHRIRLASH -->
+    <div class="glass-box p-5 rounded-3xl border border-slate-800">
+      <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
+        <i class="fa-solid fa-folder-open text-indigo-400 text-sm"></i> Barcha Loyihalar (Tahrirlash va O'chirish)
+      </h2>
+      <div id="adminProjectsList" class="space-y-3"></div>
+    </div>
+  </main>
+
+  <!-- EDIT PROJECT MODAL -->
+  <div id="editModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-box max-w-md w-full p-5 rounded-3xl space-y-3 border border-slate-700">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+        <h3 class="font-bold text-xs text-white"><i class="fa-solid fa-pen-to-square text-indigo-400"></i> Loyihani Tahrirlash</h3>
+        <button onclick="closeEditModal()" class="text-slate-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <input type="hidden" id="editProjId">
+      <input type="text" id="editTitle" placeholder="Loyiha Nomi" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
       <div class="grid grid-cols-2 gap-2">
-        <select id="pCategory" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-2 py-2.5 text-xs text-white focus:outline-none">
+        <select id="editCategory" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-2 py-2 text-xs text-white focus:outline-none">
           <option value="Mustaqil ish">Mustaqil ish</option>
           <option value="Veb-sayt">Veb-sayt</option>
           <option value="Kurs ishi">Kurs ishi</option>
         </select>
-        <input type="number" id="pPrice" required min="1000" placeholder="Narxi (UZS)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none">
+        <input type="number" id="editPrice" placeholder="Narxi (UZS)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
       </div>
-      <input type="url" id="pFileUrl" required placeholder="Fayl Linki (Google Drive / Telegram / Mega)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none">
-      <input type="url" id="pDemoUrl" placeholder="Demo Link (Majburiy emas)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none">
-      <textarea id="pDesc" rows="2" placeholder="Batafsil tavsif..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"></textarea>
-      <button type="submit" id="projSubmitBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl text-xs transition shadow-lg shadow-indigo-600/30">Barchaga E'lon Qilish</button>
-    </form>
-  </div>
-
-  <!-- Sotuvlar -->
-  <div class="glass-box p-5 rounded-3xl">
-    <h2 class="text-xs font-bold text-white mb-1 flex items-center gap-2 uppercase tracking-wider"><i class="fa-solid fa-receipt text-amber-400 text-sm"></i> Sotuvlar (avtomatik)</h2>
-    <p class="text-[10px] text-slate-500 mb-4">To'lov Click/Payme orqali tushsa, fayl talabaga o'zi ochiladi. Bu yerda faqat nazorat.</p>
-    <div id="ordersList" class="space-y-3"><div class="text-center text-slate-500 text-xs py-4">Yuklanmoqda...</div></div>
-  </div>
-
-  <!-- Shaxsiy zakazlar -->
-  <div class="glass-box p-5 rounded-3xl">
-    <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider"><i class="fa-solid fa-list-check text-purple-400 text-sm"></i> Talabalar Zakazlari</h2>
-    <div id="requestsList" class="space-y-3"><div class="text-center text-slate-500 text-xs py-2">Yuklanmoqda...</div></div>
-  </div>
-
-  <!-- Loyihalar -->
-  <div class="glass-box p-5 rounded-3xl">
-    <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider"><i class="fa-solid fa-folder-open text-indigo-400 text-sm"></i> Barcha Loyihalar</h2>
-    <div id="adminProjectsList" class="space-y-3"></div>
-  </div>
-</main>
-
-<!-- Tahrirlash -->
-<div id="editModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-  <div class="glass-box max-w-md w-full p-5 rounded-3xl space-y-3 border border-slate-700">
-    <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-      <h3 class="font-bold text-xs text-white"><i class="fa-solid fa-pen-to-square text-indigo-400"></i> Loyihani Tahrirlash</h3>
-      <button onclick="closeEditModal()" class="text-slate-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <input type="hidden" id="editProjId">
-    <input type="text" id="editTitle" placeholder="Loyiha Nomi" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
-    <div class="grid grid-cols-2 gap-2">
-      <select id="editCategory" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-2 py-2 text-xs text-white focus:outline-none">
-        <option value="Mustaqil ish">Mustaqil ish</option><option value="Veb-sayt">Veb-sayt</option><option value="Kurs ishi">Kurs ishi</option>
-      </select>
-      <input type="number" id="editPrice" placeholder="Narxi (UZS)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
-    </div>
-    <input type="url" id="editFileUrl" placeholder="Fayl linki" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
-    <input type="url" id="editDemoUrl" placeholder="Demo Link" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
-    <textarea id="editDesc" rows="2" placeholder="Tavsif..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"></textarea>
-    <div class="flex gap-2 pt-2">
-      <button onclick="saveProjectEdit()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-xl text-xs transition">Saqlash</button>
-      <button onclick="closeEditModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-4 py-2 rounded-xl text-xs transition">Bekor qilish</button>
+      <input type="url" id="editFileUrl" placeholder="Fayl Linki" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+      <input type="url" id="editDemoUrl" placeholder="Demo Link" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+      <textarea id="editDesc" rows="2" placeholder="Tavsif..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"></textarea>
+      
+      <div class="flex gap-2 pt-2">
+        <button onclick="saveProjectEdit()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-xl text-xs transition">
+          Saqlash
+        </button>
+        <button onclick="closeEditModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-4 py-2 rounded-xl text-xs transition">
+          Bekor qilish
+        </button>
+      </div>
     </div>
   </div>
-</div>
-</div>
 
-<script>
-const ADMIN_PASSWORD = 'admin2007';
-const STUDENT_URL = 'https://SIZNING-TALABA-SAYTINGIZ.vercel.app'; // talaba saytingiz manzili
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDMmB0tW-JGizWSOdlFJJd68p6sksrlS_8",
+      authDomain: "mustaqil-ish-63c2c.firebaseapp.com",
+      projectId: "mustaqil-ish-63c2c",
+      databaseURL: "https://mustaqil-ish-63c2c-default-rtdb.firebaseio.com",
+      storageBucket: "mustaqil-ish-63c2c.firebasestorage.app",
+      messagingSenderId: "577427329404",
+      appId: "1:577427329404:web:e3ac004474ff1c9d5454f9"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    let projectsMap = {};
+    let uploadedFileData = null;
+    let uploadedFileName = "";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDMmB0tW-JGizWSOdlFJJd68p6sksrlS_8",
-  authDomain: "mustaqil-ish-63c2c.firebaseapp.com",
-  projectId: "mustaqil-ish-63c2c",
-  databaseURL: "https://mustaqil-ish-63c2c-default-rtdb.firebaseio.com",
-  storageBucket: "mustaqil-ish-63c2c.firebasestorage.app",
-  messagingSenderId: "577427329404",
-  appId: "1:577427329404:web:e3ac004474ff1c9d5454f9"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fmt = n => Number(n || 0).toLocaleString();
-
-let projectsMap = {}, listening = false;
-
-// ---- Kirish: parol to'g'ri bo'lsa ochiladi, qurilma eslab qoladi ----
-function isLoggedIn() { try { return localStorage.getItem('admin_ok') === '1'; } catch { return false; } }
-function showView() {
-  const ok = isLoggedIn();
-  document.getElementById('loginView').classList.toggle('hidden', ok);
-  document.getElementById('appView').classList.toggle('hidden', !ok);
-  if (ok && !listening) { listening = true; startListeners(); }
-}
-function login(e) {
-  e.preventDefault();
-  if (document.getElementById('loginPass').value === ADMIN_PASSWORD) {
-    try { localStorage.setItem('admin_ok', '1'); } catch {}
-    showView();
-  } else {
-    document.getElementById('loginErr').classList.remove('hidden');
-  }
-}
-function logout() { try { localStorage.removeItem('admin_ok'); } catch {} location.reload(); }
-showView();
-
-const onDbError = el => e => { document.getElementById(el).innerHTML = `<div class="text-rose-400 text-xs">Ruxsat yo'q yoki xato: ${esc(e.message)}</div>`; };
-
-async function saveProject(e) {
-  e.preventDefault();
-  const btn = document.getElementById('projSubmitBtn');
-  btn.disabled = true; btn.innerText = "E'lon qilinmoqda...";
-  try {
-    const ref = db.ref('projects').push();
-    await db.ref('projectFiles/' + ref.key).set({ storagePath: null, fileName: null, fileUrl: document.getElementById('pFileUrl').value.trim() });
-    await ref.set({
-      title: document.getElementById('pTitle').value.trim(),
-      category: document.getElementById('pCategory').value,
-      price: Number(document.getElementById('pPrice').value),
-      demoUrl: document.getElementById('pDemoUrl').value.trim() || null,
-      description: document.getElementById('pDesc').value.trim(),
-      createdAt: firebase.database.ServerValue.TIMESTAMP
+    // Drag & Drop hamda Paste (Ctrl+V)
+    const dropZone = document.getElementById('dropZone');
+    ['dragenter', 'dragover'].forEach(eName => {
+      dropZone.addEventListener(eName, (e) => { e.preventDefault(); dropZone.classList.add('drop-zone--over'); }, false);
     });
-    alert("Loyiha yuklandi va e'lon qilindi!");
-    e.target.reset();
-  } catch (err) { alert('Xatolik: ' + err.message); }
-  btn.disabled = false; btn.innerText = "Barchaga E'lon Qilish";
-}
-
-function startListeners() {
-  db.ref('projects').on('value', snap => {
-    const box = document.getElementById('adminProjectsList');
-    projectsMap = {}; const data = snap.val() || {};
-    box.innerHTML = Object.keys(data).map(k => {
-      projectsMap[k] = { id: k, ...data[k] }; const p = projectsMap[k];
-      return `<div class="bg-slate-900/90 p-3 rounded-2xl border border-slate-800 flex justify-between items-center text-xs">
-        <div><div class="font-bold text-white">${esc(p.title)}</div><div class="text-[10px] text-slate-400">${fmt(p.price)} UZS • ${esc(p.category)}</div></div>
-        <div class="flex items-center gap-1">
-          <button onclick="openEditModal('${esc(k)}')" class="text-indigo-400 hover:text-indigo-300 p-2"><i class="fa-solid fa-pen-to-square"></i></button>
-          <button onclick="deleteProject('${esc(k)}')" class="text-rose-400 hover:text-rose-300 p-2"><i class="fa-solid fa-trash-can"></i></button>
-        </div></div>`;
-    }).join('') || '<div class="text-slate-500 text-xs text-center">Loyiha yo\'q</div>';
-    if (window._lastOrders) renderOrders(window._lastOrders);
-  }, onDbError('adminProjectsList'));
-
-  db.ref('orders').orderByChild('createdAt').limitToLast(100).on('value', snap => {
-    window._lastOrders = snap.val() || {}; renderOrders(window._lastOrders);
-  }, onDbError('ordersList'));
-
-  db.ref('requests').on('value', snap => {
-    const box = document.getElementById('requestsList'); const data = snap.val() || {};
-    document.getElementById('statRequests').innerText = Object.keys(data).length;
-    box.innerHTML = Object.keys(data).reverse().map(k => { const r = data[k]; return `
-      <div class="bg-slate-900 p-3.5 rounded-2xl border border-slate-800 text-xs">
-        <div class="flex justify-between items-start mb-1">
-          <span class="font-bold text-white text-sm">${esc(r.studentName)}</span>
-          <button onclick="db.ref('requests/${esc(k)}').remove()" class="text-slate-500 hover:text-rose-400"><i class="fa-solid fa-trash"></i></button>
-        </div>
-        <div class="text-indigo-400 text-[11px] font-medium mb-2"><i class="fa-brands fa-telegram"></i> ${esc(r.studentContact)}</div>
-        <p class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-slate-300 text-[11px] leading-relaxed">${esc(r.topic)}</p>
-      </div>`; }).join('') || '<div class="text-center py-2 text-slate-500 text-xs">Hozircha zakazlar yo\'q.</div>';
-  }, onDbError('requestsList'));
-}
-
-function renderOrders(data) {
-  const keys = Object.keys(data).sort((a, b) => data[b].createdAt - data[a].createdAt);
-  let sales = 0, revenue = 0;
-  const badge = {
-    paid: '<span class="text-emerald-400 font-bold">TO\'LANGAN</span>',
-    new: '<span class="text-slate-400 font-bold">TO\'LOV KUTILMOQDA</span>',
-    cancelled: '<span class="text-rose-400 font-bold">BEKOR</span>',
-    revoked: '<span class="text-amber-400 font-bold">QULFLANGAN</span>'
-  };
-  const html = keys.map(k => {
-    const o = data[k];
-    if (o.status === 'paid') { sales++; revenue += Number(o.amount || 0); }
-    const action = o.status === 'paid'
-      ? `<button onclick="setOrderStatus('${esc(k)}','revoked')" class="bg-amber-600/80 hover:bg-amber-600 px-3 py-1.5 rounded-xl text-white font-bold text-[11px]"><i class="fa-solid fa-lock"></i> Qulflash</button>`
-      : o.status === 'revoked'
-        ? `<button onclick="setOrderStatus('${esc(k)}','paid')" class="bg-emerald-600/80 hover:bg-emerald-600 px-3 py-1.5 rounded-xl text-white font-bold text-[11px]"><i class="fa-solid fa-rotate-left"></i> Qayta ochish</button>` : '';
-    return `<div class="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 text-xs space-y-2">
-      <div class="flex justify-between items-start">
-        <div>
-          <div class="font-bold text-white text-sm">${esc(o.name)}</div>
-          <div class="text-slate-400 text-[11px]"><i class="fa-brands fa-telegram text-indigo-400"></i> ${esc(o.contact)}</div>
-          <div class="text-indigo-300 font-semibold text-[11px] mt-1">${esc(o.projectTitle || (projectsMap[o.projectId] || {}).title || '—')} (${fmt(o.amount)} UZS)</div>
-          <div class="text-slate-500 text-[10px] mt-0.5">${esc(o.provider)} • ${new Date(o.createdAt).toLocaleString()} • yuklab olingan: ${o.downloads || 0}</div>
-        </div>
-        <div class="text-[10px] flex flex-col items-end gap-1">${badge[o.status] || esc(o.status)}</div>
-      </div>
-      <div class="flex gap-2 pt-1">
-        ${action}
-        <button onclick="copyRecovery('${esc(k)}')" class="bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl text-slate-300 text-[11px]"><i class="fa-regular fa-copy"></i> Tiklash havolasi</button>
-      </div>
-    </div>`;
-  }).join('') || '<div class="text-center text-slate-500 text-xs py-2">Hozircha sotuv yo\'q.</div>';
-  document.getElementById('ordersList').innerHTML = html;
-  document.getElementById('statSales').innerText = sales;
-  document.getElementById('statRevenue').innerText = fmt(revenue) + ' UZS';
-}
-
-function setOrderStatus(id, status) {
-  if (confirm(status === 'revoked' ? 'Ruxsatni qulflaysizmi? Talaba fayl ola olmaydi.' : 'Ruxsatni qayta ochasizmi?'))
-    db.ref('orders/' + id + '/status').set(status);
-}
-function copyRecovery(id) {
-  const o = window._lastOrders[id];
-  const url = `${STUDENT_URL.replace(/\/$/, '')}/?order=${id}&token=${o.token}`;
-  navigator.clipboard.writeText(url).then(() => alert('Havola nusxalandi. Talabaga yuboring.'));
-}
-
-async function openEditModal(id) {
-  const p = projectsMap[id]; if (!p) return;
-  const f = (await db.ref('projectFiles/' + id).once('value')).val() || {};
-  document.getElementById('editProjId').value = id;
-  document.getElementById('editTitle').value = p.title || '';
-  document.getElementById('editCategory').value = p.category || 'Mustaqil ish';
-  document.getElementById('editPrice').value = p.price || 0;
-  document.getElementById('editFileUrl').value = f.fileUrl || '';
-  document.getElementById('editDemoUrl').value = p.demoUrl || '';
-  document.getElementById('editDesc').value = p.description || '';
-  document.getElementById('editModal').classList.remove('hidden');
-}
-function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
-async function saveProjectEdit() {
-  const id = document.getElementById('editProjId').value; if (!id) return;
-  try {
-    await db.ref('projects/' + id).update({
-      title: document.getElementById('editTitle').value.trim(),
-      category: document.getElementById('editCategory').value,
-      price: Number(document.getElementById('editPrice').value),
-      demoUrl: document.getElementById('editDemoUrl').value.trim() || null,
-      description: document.getElementById('editDesc').value.trim()
+    ['dragleave', 'drop'].forEach(eName => {
+      dropZone.addEventListener(eName, (e) => { e.preventDefault(); dropZone.classList.remove('drop-zone--over'); }, false);
     });
-    await db.ref('projectFiles/' + id + '/fileUrl').set(document.getElementById('editFileUrl').value.trim() || null);
-    alert('Loyiha tahrirlandi!'); closeEditModal();
-  } catch (e) { alert('Xatolik: ' + e.message); }
-}
-async function deleteProject(id) {
-  if (!confirm("Loyiha o'chirilsinmi? Sotib olgan talabalar faylni ola olmay qoladi.")) return;
-  await db.ref('projectFiles/' + id).remove();
-  await db.ref('projects/' + id).remove();
-}
-</script>
+    dropZone.addEventListener('drop', (e) => {
+      const files = e.dataTransfer.files;
+      if (files.length) handleFileSelect(files[0]);
+    });
+    document.addEventListener('paste', (e) => {
+      const items = e.clipboardData.items;
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].kind === 'file') {
+          handleFileSelect(items[i].getAsFile());
+          break;
+        }
+      }
+    });
+
+    function handleFileSelect(file) {
+      if (!file) return;
+      uploadedFileName = file.name;
+      document.getElementById('fileStatusText').innerHTML = `<span class="text-emerald-400 font-bold"><i class="fa-solid fa-circle-check"></i> ${file.name}</span> yuklandi!`;
+      const reader = new FileReader();
+      reader.onload = function(e) { uploadedFileData = e.target.result; };
+      reader.readAsDataURL(file);
+    }
+
+    function saveCard(e) {
+      e.preventDefault();
+      db.ref("settings/cards").push().set({
+        number: document.getElementById('cNumber').value,
+        holder: document.getElementById('cHolder').value,
+        bank: document.getElementById('cBank').value
+      }).then(() => {
+        alert("Karta qo'shildi!");
+        e.target.reset();
+      });
+    }
+
+    db.ref("settings/cards").on("value", snapshot => {
+      const container = document.getElementById('adminCardsList');
+      container.innerHTML = '';
+      const data = snapshot.val();
+      if(data) {
+        Object.keys(data).forEach(k => {
+          const c = data[k];
+          container.innerHTML += `
+            <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
+              <div><span class="font-bold text-white">${c.number}</span> <span class="text-slate-400 text-[10px]">(${c.holder})</span></div>
+              <button onclick="db.ref('settings/cards/${k}').remove()" class="text-rose-400 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          `;
+        });
+      }
+    });
+
+    function saveProject(e) {
+      e.preventDefault();
+      const btn = document.getElementById('projSubmitBtn');
+      btn.disabled = true;
+      btn.innerText = "E'lon qilinmoqda...";
+      db.ref("projects").push().set({
+        title: document.getElementById('pTitle').value,
+        category: document.getElementById('pCategory').value,
+        price: Number(document.getElementById('pPrice').value),
+        fileData: uploadedFileData || null,
+        fileName: uploadedFileName || null,
+        fileUrl: document.getElementById('pFileUrl').value || null,
+        demoUrl: document.getElementById('pDemoUrl').value || null,
+        description: document.getElementById('pDesc').value,
+        createdAt: Date.now()
+      }).then(() => {
+        alert("Loyiha yuklandi va e'lon qilindi!");
+        e.target.reset();
+        uploadedFileData = null;
+        uploadedFileName = "";
+        document.getElementById('fileStatusText').innerText = "Faylni bosib tanlang yoki shu yerga tashlang (Ctrl+V)";
+        btn.disabled = false;
+        btn.innerText = "Barchaga E'lon Qilish";
+      });
+    }
+
+    // Zakazlar
+    db.ref("orders").on("value", snapshot => {
+      const container = document.getElementById('ordersList');
+      container.innerHTML = '';
+      const data = snapshot.val();
+      if (!data) {
+        container.innerHTML = `<div class="text-center py-2 text-slate-500 text-xs">Hozircha zakazlar yo'q.</div>`;
+        return;
+      }
+      Object.keys(data).forEach(k => {
+        const ord = data[k];
+        container.innerHTML += `
+          <div class="bg-slate-900 p-3.5 rounded-2xl border border-slate-800 text-xs relative">
+            <div class="flex justify-between items-start mb-1">
+              <span class="font-bold text-white text-sm">${ord.studentName}</span>
+              <button onclick="db.ref('orders/${k}').remove()" class="text-slate-500 hover:text-rose-400"><i class="fa-solid fa-trash"></i></button>
+            </div>
+            <div class="text-indigo-400 text-[11px] font-medium mb-2"><i class="fa-brands fa-telegram"></i> ${ord.studentContact}</div>
+            <p class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-slate-300 text-[11px] leading-relaxed">${ord.topic}</p>
+          </div>
+        `;
+      });
+    });
+
+    // Loyihalar va Tahrirlash
+    db.ref("projects").on("value", snapshot => {
+      const container = document.getElementById('adminProjectsList');
+      container.innerHTML = '';
+      projectsMap = {};
+      const data = snapshot.val();
+      if (data) {
+        Object.keys(data).forEach(key => {
+          const p = { id: key, ...data[key] };
+          projectsMap[key] = p;
+          container.innerHTML += `
+            <div class="bg-slate-900/90 p-3 rounded-2xl border border-slate-800 flex justify-between items-center text-xs">
+              <div>
+                <div class="font-bold text-white">${p.title}</div>
+                <div class="text-[10px] text-slate-400">${Number(p.price).toLocaleString()} UZS • ${p.category}</div>
+              </div>
+              <div class="flex items-center gap-1">
+                <button onclick="openEditModal('${p.id}')" class="text-indigo-400 hover:text-indigo-300 p-2"><i class="fa-solid fa-pen-to-square"></i></button>
+                <button onclick="db.ref('projects/${p.id}').remove()" class="text-rose-400 hover:text-rose-300 p-2"><i class="fa-solid fa-trash-can"></i></button>
+              </div>
+            </div>
+          `;
+        });
+      }
+    });
+
+    function openEditModal(id) {
+      const p = projectsMap[id];
+      if (!p) return;
+      document.getElementById('editProjId').value = id;
+      document.getElementById('editTitle').value = p.title || '';
+      document.getElementById('editCategory').value = p.category || 'Mustaqil ish';
+      document.getElementById('editPrice').value = p.price || 0;
+      document.getElementById('editFileUrl').value = p.fileUrl || '';
+      document.getElementById('editDemoUrl').value = p.demoUrl || '';
+      document.getElementById('editDesc').value = p.description || '';
+      document.getElementById('editModal').classList.remove('hidden');
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').classList.add('hidden');
+    }
+
+    function saveProjectEdit() {
+      const id = document.getElementById('editProjId').value;
+      if (!id) return;
+      db.ref("projects/" + id).update({
+        title: document.getElementById('editTitle').value,
+        category: document.getElementById('editCategory').value,
+        price: Number(document.getElementById('editPrice').value),
+        fileUrl: document.getElementById('editFileUrl').value || null,
+        demoUrl: document.getElementById('editDemoUrl').value || null,
+        description: document.getElementById('editDesc').value
+      }).then(() => {
+        alert("Loyiha tahrirlandi!");
+        closeEditModal();
+      });
+    }
+
+    // To'lovlar, Ruxsatlar va Qayta Sotuvga Chiqarish Mantiqi
+    db.ref("purchases").on("value", snapshot => {
+      const list = document.getElementById('requestsList');
+      list.innerHTML = '';
+      const data = snapshot.val();
+      let pendingCount = 0, totalRevenue = 0;
+      if (data) {
+        Object.keys(data).forEach(key => {
+          const req = { id: key, ...data[key] };
+          const p = projectsMap[req.projectId] || { title: 'Loyiha (Oʻchirilgan)', price: 0 };
+          if (req.status === 'pending') pendingCount++;
+          if (req.status === 'approved') totalRevenue += Number(p.price || 0);
+
+          let statusBadge = req.status === 'pending' ? '<span class="text-amber-400 font-bold">KUTILMOQDA</span>' : (req.status === 'approved' ? '<span class="text-emerald-400 font-bold">TASDIQLANGAN (Ruxsat berilgan)</span>' : '<span class="text-rose-400 font-bold">QULFLANGAN (Sotuvga qaytgan)</span>');
+          const receiptImgTag = req.receiptImage ? `
+            <a href="${req.receiptImage}" target="_blank" class="block mt-2">
+              <img src="${req.receiptImage}" class="w-full h-24 object-cover rounded-xl border border-slate-700/80">
+            </a>
+          ` : '';
+
+          list.innerHTML += `
+            <div class="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 text-xs space-y-2">
+              <div class="flex justify-between items-start">
+                <div>
+                  <div class="font-bold text-white text-sm">${req.studentName}</div>
+                  <div class="text-slate-400 text-[11px]"><i class="fa-brands fa-telegram text-indigo-400"></i> ${req.studentContact}</div>
+                  <div class="text-indigo-300 font-semibold text-[11px] mt-1">${p.title} (${Number(p.price).toLocaleString()} UZS)</div>
+                  <div class="text-slate-300 text-[10px] mt-0.5">O'tkazgan summa: <b class="text-emerald-400">${Number(req.paidAmount || 0).toLocaleString()} UZS</b></div>
+                </div>
+                <div class="text-[10px] flex flex-col items-end gap-1">
+                  ${statusBadge}
+                  <button onclick="db.ref('purchases/${req.id}').remove()" class="text-slate-500 hover:text-rose-400 text-[11px]" title="So'rovni butunlay o'chirish"><i class="fa-solid fa-trash"></i></button>
+                </div>
+              </div>
+              ${receiptImgTag}
+              <div class="flex gap-2 pt-2">
+                ${req.status === 'pending' ? `
+                  <button onclick="db.ref('purchases/${req.id}').update({status: 'approved', downloadOnce: true})" class="flex-1 bg-emerald-600 hover:bg-emerald-500 py-2 rounded-xl text-white font-bold text-[11px] transition">
+                    <i class="fa-solid fa-check"></i> Ruxsat berish
+                  </button>
+                  <button onclick="db.ref('purchases/${req.id}').update({status: 'revoked'})" class="bg-rose-600/80 hover:bg-rose-600 px-3 py-2 rounded-xl text-white font-bold text-[11px] transition">
+                    <i class="fa-solid fa-xmark"></i> Rad etish
+                  </button>
+                ` : (req.status === 'approved' ? `
+                  <button onclick="db.ref('purchases/${req.id}').update({status: 'revoked'})" class="flex-1 bg-amber-600/80 hover:bg-amber-600 py-1.5 rounded-xl text-white font-bold text-[11px] transition" title="Ruxsatni yopish va loyihani boshqa talabalar uchun qayta sotuvga chiqarish">
+                    <i class="fa-solid fa-lock"></i> Ruxsatni Qulflash (Qayta Sotuvga Chiqarish)
+                  </button>
+                ` : `
+                  <button onclick="db.ref('purchases/${req.id}').update({status: 'approved'})" class="flex-1 bg-emerald-600/80 hover:bg-emerald-600 py-1.5 rounded-xl text-white font-bold text-[11px] transition">
+                    <i class="fa-solid fa-rotate-left"></i> Qayta Ruxsat Berish
+                  </button>
+                `)}
+              </div>
+            </div>
+          `;
+        });
+      }
+      document.getElementById('statPending').innerText = pendingCount;
+      document.getElementById('statRevenue').innerText = totalRevenue.toLocaleString() + " UZS";
+    });
+  </script>
 </body>
 </html>
