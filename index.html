@@ -8,13 +8,10 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 <style>
 body { background-color: #070a12; color: #f8fafc; font-family: sans-serif; }
 .glass-box { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
-.drop-zone--over { border-color: #6366f1 !important; background-color: rgba(99, 102, 241, 0.1) !important; }
 </style>
 </head>
 <body class="pb-16">
@@ -23,9 +20,8 @@ body { background-color: #070a12; color: #f8fafc; font-family: sans-serif; }
 <div id="loginView" class="hidden min-h-screen flex items-center justify-center p-4">
   <form onsubmit="login(event)" class="glass-box w-full max-w-sm p-6 rounded-3xl space-y-3">
     <h1 class="text-sm font-bold text-white"><i class="fa-solid fa-shield-halved text-indigo-400"></i> Admin kirish</h1>
-    <input type="email" id="loginEmail" required placeholder="Email" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none">
-    <input type="password" id="loginPass" required placeholder="Parol" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none">
-    <p id="loginErr" class="text-[11px] text-rose-400 hidden"></p>
+    <input type="password" id="loginPass" required autofocus placeholder="Parol" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none">
+    <p id="loginErr" class="text-[11px] text-rose-400 hidden">Parol noto'g'ri</p>
     <button class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-xs">Kirish</button>
   </form>
 </div>
@@ -39,7 +35,7 @@ body { background-color: #070a12; color: #f8fafc; font-family: sans-serif; }
       <p class="text-[10px] text-slate-400">EduProjects Tizimi (Boshqaruv)</p>
     </div>
   </div>
-  <button onclick="firebase.auth().signOut()" class="text-slate-400 hover:text-white text-xs"><i class="fa-solid fa-right-from-bracket"></i> Chiqish</button>
+  <button onclick="logout()" class="text-slate-400 hover:text-white text-xs"><i class="fa-solid fa-right-from-bracket"></i> Chiqish</button>
 </header>
 
 <main class="max-w-md mx-auto px-4 mt-6 space-y-6">
@@ -71,17 +67,7 @@ body { background-color: #070a12; color: #f8fafc; font-family: sans-serif; }
         </select>
         <input type="number" id="pPrice" required min="1000" placeholder="Narxi (UZS)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none">
       </div>
-      <div>
-        <label class="block text-[11px] text-slate-400 mb-1">Faylni yuklang (tanlang, tashlang yoki Ctrl+V):</label>
-        <div id="dropZone" class="border-2 border-dashed border-slate-700 bg-slate-900/60 rounded-2xl p-4 text-center cursor-pointer hover:border-indigo-500 transition relative">
-          <i class="fa-solid fa-cloud-arrow-up text-2xl text-indigo-400 mb-1"></i>
-          <p class="text-[11px] text-slate-300 font-semibold" id="fileStatusText">Faylni bosib tanlang yoki shu yerga tashlang (Ctrl+V)</p>
-          <span class="text-[9px] text-slate-500">.zip, .docx, .pdf, .pptx, .rar</span>
-          <input type="file" id="fileInput" onchange="handleFileSelect(this.files[0])" class="absolute inset-0 opacity-0 cursor-pointer">
-        </div>
-        <div class="h-1.5 bg-slate-800 rounded-full mt-2 overflow-hidden hidden" id="progWrap"><div id="progBar" class="h-full bg-indigo-500 w-0"></div></div>
-      </div>
-      <input type="url" id="pFileUrl" placeholder="Yoki Fayl Linki (Google Drive / Telegram)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none">
+      <input type="url" id="pFileUrl" required placeholder="Fayl Linki (Google Drive / Telegram / Mega)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none">
       <input type="url" id="pDemoUrl" placeholder="Demo Link (Majburiy emas)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none">
       <textarea id="pDesc" rows="2" placeholder="Batafsil tavsif..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"></textarea>
       <button type="submit" id="projSubmitBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl text-xs transition shadow-lg shadow-indigo-600/30">Barchaga E'lon Qilish</button>
@@ -123,7 +109,7 @@ body { background-color: #070a12; color: #f8fafc; font-family: sans-serif; }
       </select>
       <input type="number" id="editPrice" placeholder="Narxi (UZS)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
     </div>
-    <input type="url" id="editFileUrl" placeholder="Tashqi fayl linki (yuklangan fayl o'zgarmaydi)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+    <input type="url" id="editFileUrl" placeholder="Fayl linki" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
     <input type="url" id="editDemoUrl" placeholder="Demo Link" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
     <textarea id="editDesc" rows="2" placeholder="Tavsif..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"></textarea>
     <div class="flex gap-2 pt-2">
@@ -135,6 +121,9 @@ body { background-color: #070a12; color: #f8fafc; font-family: sans-serif; }
 </div>
 
 <script>
+const ADMIN_PASSWORD = 'admin2007';
+const STUDENT_URL = 'https://SIZNING-TALABA-SAYTINGIZ.vercel.app'; // talaba saytingiz manzili
+
 const firebaseConfig = {
   apiKey: "AIzaSyDMmB0tW-JGizWSOdlFJJd68p6sksrlS_8",
   authDomain: "mustaqil-ish-63c2c.firebaseapp.com",
@@ -145,67 +134,41 @@ const firebaseConfig = {
   appId: "1:577427329404:web:e3ac004474ff1c9d5454f9"
 };
 firebase.initializeApp(firebaseConfig);
-// MUHIM: talaba saytingizning manzilini yozing (to'lov backend'i shu saytda turadi)
-const STUDENT_URL = 'https://SIZNING-TALABA-SAYTINGIZ.vercel.app';
 const db = firebase.database();
-const storage = firebase.storage();
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt = n => Number(n || 0).toLocaleString();
 
-let projectsMap = {}, selectedFile = null, listening = false;
+let projectsMap = {}, listening = false;
 
-// ---- Kirish ----
-firebase.auth().onAuthStateChanged(user => {
-  document.getElementById('loginView').classList.toggle('hidden', !!user);
-  document.getElementById('appView').classList.toggle('hidden', !user);
-  if (user && !listening) { listening = true; startListeners(); }
-});
+// ---- Kirish: parol to'g'ri bo'lsa ochiladi, qurilma eslab qoladi ----
+function isLoggedIn() { try { return localStorage.getItem('admin_ok') === '1'; } catch { return false; } }
+function showView() {
+  const ok = isLoggedIn();
+  document.getElementById('loginView').classList.toggle('hidden', ok);
+  document.getElementById('appView').classList.toggle('hidden', !ok);
+  if (ok && !listening) { listening = true; startListeners(); }
+}
 function login(e) {
   e.preventDefault();
-  const err = document.getElementById('loginErr'); err.classList.add('hidden');
-  firebase.auth().signInWithEmailAndPassword(document.getElementById('loginEmail').value, document.getElementById('loginPass').value)
-    .catch(() => { err.innerText = "Email yoki parol noto'g'ri"; err.classList.remove('hidden'); });
+  if (document.getElementById('loginPass').value === ADMIN_PASSWORD) {
+    try { localStorage.setItem('admin_ok', '1'); } catch {}
+    showView();
+  } else {
+    document.getElementById('loginErr').classList.remove('hidden');
+  }
 }
+function logout() { try { localStorage.removeItem('admin_ok'); } catch {} location.reload(); }
+showView();
+
 const onDbError = el => e => { document.getElementById(el).innerHTML = `<div class="text-rose-400 text-xs">Ruxsat yo'q yoki xato: ${esc(e.message)}</div>`; };
-
-// ---- Fayl tanlash (tanlash / tashlash / Ctrl+V) ----
-const dropZone = document.getElementById('dropZone');
-['dragenter', 'dragover'].forEach(n => dropZone.addEventListener(n, e => { e.preventDefault(); dropZone.classList.add('drop-zone--over'); }));
-['dragleave', 'drop'].forEach(n => dropZone.addEventListener(n, e => { e.preventDefault(); dropZone.classList.remove('drop-zone--over'); }));
-dropZone.addEventListener('drop', e => { if (e.dataTransfer.files.length) handleFileSelect(e.dataTransfer.files[0]); });
-document.addEventListener('paste', e => {
-  for (const it of e.clipboardData.items) if (it.kind === 'file') { handleFileSelect(it.getAsFile()); break; }
-});
-function handleFileSelect(file) {
-  if (!file) return;
-  selectedFile = file;
-  document.getElementById('fileStatusText').innerHTML = `<span class="text-emerald-400 font-bold"><i class="fa-solid fa-circle-check"></i> ${esc(file.name)}</span> tanlandi`;
-}
-
-function uploadToStorage(file) {
-  const path = `files/${Date.now()}_${file.name.replace(/[^\w.\-]+/g, '_')}`;
-  const task = storage.ref(path).put(file);
-  const wrap = document.getElementById('progWrap'), bar = document.getElementById('progBar');
-  wrap.classList.remove('hidden');
-  return new Promise((resolve, reject) => {
-    task.on('state_changed',
-      s => { bar.style.width = (100 * s.bytesTransferred / s.totalBytes) + '%'; },
-      reject,
-      () => { wrap.classList.add('hidden'); bar.style.width = '0'; resolve(path); });
-  });
-}
 
 async function saveProject(e) {
   e.preventDefault();
   const btn = document.getElementById('projSubmitBtn');
-  const fileUrl = document.getElementById('pFileUrl').value.trim();
-  if (!selectedFile && !fileUrl) { alert('Fayl yuklang yoki fayl linkini kiriting'); return; }
   btn.disabled = true; btn.innerText = "E'lon qilinmoqda...";
   try {
-    const storagePath = selectedFile ? await uploadToStorage(selectedFile) : null;
     const ref = db.ref('projects').push();
-    // Fayl ma'lumoti alohida yo'lda: mijozlar o'qiy olmaydi, faqat to'lovdan keyin server beradi
-    await db.ref('projectFiles/' + ref.key).set({ storagePath, fileName: selectedFile ? selectedFile.name : null, fileUrl: fileUrl || null });
+    await db.ref('projectFiles/' + ref.key).set({ storagePath: null, fileName: null, fileUrl: document.getElementById('pFileUrl').value.trim() });
     await ref.set({
       title: document.getElementById('pTitle').value.trim(),
       category: document.getElementById('pCategory').value,
@@ -215,14 +178,12 @@ async function saveProject(e) {
       createdAt: firebase.database.ServerValue.TIMESTAMP
     });
     alert("Loyiha yuklandi va e'lon qilindi!");
-    e.target.reset(); selectedFile = null;
-    document.getElementById('fileStatusText').innerText = 'Faylni bosib tanlang yoki shu yerga tashlang (Ctrl+V)';
+    e.target.reset();
   } catch (err) { alert('Xatolik: ' + err.message); }
   btn.disabled = false; btn.innerText = "Barchaga E'lon Qilish";
 }
 
 function startListeners() {
-  // Loyihalar
   db.ref('projects').on('value', snap => {
     const box = document.getElementById('adminProjectsList');
     projectsMap = {}; const data = snap.val() || {};
@@ -238,12 +199,10 @@ function startListeners() {
     if (window._lastOrders) renderOrders(window._lastOrders);
   }, onDbError('adminProjectsList'));
 
-  // Sotuvlar
   db.ref('orders').orderByChild('createdAt').limitToLast(100).on('value', snap => {
     window._lastOrders = snap.val() || {}; renderOrders(window._lastOrders);
   }, onDbError('ordersList'));
 
-  // Shaxsiy zakazlar
   db.ref('requests').on('value', snap => {
     const box = document.getElementById('requestsList'); const data = snap.val() || {};
     document.getElementById('statRequests').innerText = Object.keys(data).length;
@@ -287,7 +246,7 @@ function renderOrders(data) {
       </div>
       <div class="flex gap-2 pt-1">
         ${action}
-        <button onclick="copyRecovery('${esc(k)}')" class="bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl text-slate-300 text-[11px]" title="Talaba telefonini yo'qotsa shu havolani yuboring"><i class="fa-regular fa-copy"></i> Tiklash havolasi</button>
+        <button onclick="copyRecovery('${esc(k)}')" class="bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl text-slate-300 text-[11px]"><i class="fa-regular fa-copy"></i> Tiklash havolasi</button>
       </div>
     </div>`;
   }).join('') || '<div class="text-center text-slate-500 text-xs py-2">Hozircha sotuv yo\'q.</div>';
@@ -303,10 +262,9 @@ function setOrderStatus(id, status) {
 function copyRecovery(id) {
   const o = window._lastOrders[id];
   const url = `${STUDENT_URL.replace(/\/$/, '')}/?order=${id}&token=${o.token}`;
-  navigator.clipboard.writeText(url).then(() => alert('Havola nusxalandi. Uni talabaga yuboring: u ochsa, xarid qaytadan ko\'rinadi.'));
+  navigator.clipboard.writeText(url).then(() => alert('Havola nusxalandi. Talabaga yuboring.'));
 }
 
-// ---- Tahrirlash / o'chirish ----
 async function openEditModal(id) {
   const p = projectsMap[id]; if (!p) return;
   const f = (await db.ref('projectFiles/' + id).once('value')).val() || {};
@@ -336,8 +294,6 @@ async function saveProjectEdit() {
 }
 async function deleteProject(id) {
   if (!confirm("Loyiha o'chirilsinmi? Sotib olgan talabalar faylni ola olmay qoladi.")) return;
-  const f = (await db.ref('projectFiles/' + id).once('value')).val();
-  if (f && f.storagePath) { try { await storage.ref(f.storagePath).delete(); } catch {} }
   await db.ref('projectFiles/' + id).remove();
   await db.ref('projects/' + id).remove();
 }
