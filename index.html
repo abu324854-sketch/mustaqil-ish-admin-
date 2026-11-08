@@ -6,7 +6,6 @@
   <title>PRO Admin Control Panel - EduProjects</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <!-- JSZip kutubxonasi arxiv fayllarni ichini ochish uchun -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -62,22 +61,20 @@
     <!-- YANGI LOYIHA YOKI ZIP YUKLASH -->
     <div class="glass-box p-5 rounded-3xl border border-slate-800 shadow-2xl">
       <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
-        <i class="fa-solid fa-folder-plus text-indigo-400 text-sm"></i> Yangi Loyiha yoki ZIP Arxiv Yuklash
+        <i class="fa-solid fa-folder-plus text-indigo-400 text-sm"></i> ZIP Arxiv yoki Fayl Yuklash
       </h2>
       <form onsubmit="saveProject(event)" class="space-y-3">
-        <input type="text" id="pTitle" required placeholder="Loyiha Nomi (ZIP bo'lsa turkum nomi)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
-        
         <div class="grid grid-cols-2 gap-2">
           <select id="pCategory" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-2 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
             <option value="Mustaqil ish">Mustaqil ish</option>
             <option value="Veb-sayt">Veb-sayt</option>
             <option value="Kurs ishi">Kurs ishi</option>
           </select>
-          <input type="number" id="pPrice" required placeholder="Narxi (Har biriga bir xil UZS)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+          <input type="number" id="pPrice" required placeholder="Narxi (Barchasiga bir xil) UZS" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
         </div>
 
         <div>
-          <label class="block text-[11px] text-slate-400 mb-1">ZIP yoki fayl yuklang (ZIP ichidagi barcha fayllar alohida bo'linadi):</label>
+          <label class="block text-[11px] text-slate-400 mb-1">ZIP fayl yuklang (Ichidagi har bir fayl o'z nomi bilan alohida bo'linadi):</label>
           <div id="dropZone" class="border-2 border-dashed border-slate-700 bg-slate-900/60 rounded-2xl p-4 text-center cursor-pointer hover:border-indigo-500 transition relative">
             <i class="fa-solid fa-file-zipper text-3xl text-indigo-400 mb-1"></i>
             <p class="text-[11px] text-slate-300 font-semibold" id="fileStatusText">Faylni bosing yoki shu yerga tashlang</p>
@@ -86,7 +83,7 @@
           </div>
         </div>
 
-        <textarea id="pDesc" rows="2" placeholder="Batafsil tavsif..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"></textarea>
+        <textarea id="pDesc" rows="2" placeholder="Umumiy tavsif (majburiy emas)..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"></textarea>
         
         <button type="submit" id="projSubmitBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl text-xs transition shadow-lg shadow-indigo-600/30">
           E'lon Qilish va Tarqatish
@@ -150,19 +147,22 @@
           let count = 0;
           for (let relativePath in zipContent.files) {
             let zipEntry = zipContent.files[relativePath];
-            if (!zipEntry.dir) {
+            if (!zipEntry.dir && !zipEntry.name.startsWith('__MACOSX')) {
               let blob = await zipEntry.async("blob");
               let base64Data = await blobToBase64(blob);
-              extractedFilesList.push({
-                name: zipEntry.name.split('/').pop(),
-                data: base64Data
-              });
-              count++;
+              let originalFileName = zipEntry.name.split('/').pop();
+              if(originalFileName) {
+                extractedFilesList.push({
+                  name: originalFileName,
+                  data: base64Data
+                });
+                count++;
+              }
             }
           }
-          document.getElementById('fileStatusText').innerHTML = `<span class="text-emerald-400 font-bold"><i class="fa-solid fa-circle-check"></i> ZIP ichidan ${count} ta fayl alohida ajratib olindi!</span>`;
+          document.getElementById('fileStatusText').innerHTML = `<span class="text-emerald-400 font-bold"><i class="fa-solid fa-circle-check"></i> ZIP ichidan ${count} ta fayl ajratildi!</span>`;
         } catch (err) {
-          alert("ZIP faylini ochishda xatolik yuz berdi!");
+          alert("ZIP faylni ochishda xatolik yuz berdi!");
           document.getElementById('fileStatusText').innerText = "Xatolik yuz berdi!";
         }
       } else {
@@ -193,7 +193,7 @@
         holder: document.getElementById('cHolder').value,
         bank: document.getElementById('cBank').value
       }).then(() => {
-        alert("Karta muvaffaqiyatli qo'shildi!");
+        alert("Karta qo'shildi!");
         e.target.reset();
       });
     }
@@ -218,33 +218,31 @@
     function saveProject(e) {
       e.preventDefault();
       if (extractedFilesList.length === 0) {
-        alert("Iltimos, avval fayl yoki ZIP yuklang!");
+        alert("Iltimos, avval ZIP yoki fayl yuklang!");
         return;
       }
       const btn = document.getElementById('projSubmitBtn');
       btn.disabled = true;
-      btn.innerText = "Yuklanmoqda...";
+      btn.innerText = "Saqlanmoqda...";
 
-      const baseTitle = document.getElementById('pTitle').value;
       const category = document.getElementById('pCategory').value;
       const price = Number(document.getElementById('pPrice').value);
       const description = document.getElementById('pDesc').value;
 
       let promises = extractedFilesList.map((fileObj, index) => {
-        let finalTitle = extractedFilesList.length > 1 ? `${baseTitle} - ${fileObj.name}` : baseTitle;
         return db.ref("projects").push().set({
-          title: finalTitle,
+          title: fileObj.name, // Faylning o'z asl nomi loyiha nomi bo'ladi
           category: category,
           price: price,
           fileData: fileObj.data,
           fileName: fileObj.name,
-          description: description,
+          description: description || `Tayyor ${fileObj.name} ishi`,
           createdAt: Date.now() + index
         });
       });
 
       Promise.all(promises).then(() => {
-        alert(`Barcha (${extractedFilesList.length} ta) loyihalar muvaffaqiyatli e'lon qilindi va bir xil narx belgilandi!`);
+        alert(`Jami ${extractedFilesList.length} ta fayl o'z asl ismlari bilan alohida loyiha qilib e'lon qilindi!`);
         e.target.reset();
         extractedFilesList = [];
         document.getElementById('fileStatusText').innerText = "Faylni bosing yoki shu yerga tashlang";
@@ -258,7 +256,7 @@
       container.innerHTML = '';
       const data = snapshot.val();
       if (!data) {
-        container.innerHTML = `<div class="text-center py-2 text-slate-500 text-xs">Hozircha buyurtmalar yo'q.</div>`;
+        container.innerHTML = `<div class="text-center py-2 text-slate-500 text-xs">Buyurtmalar yo'q.</div>`;
         return;
       }
       Object.keys(data).forEach(k => {
@@ -288,7 +286,7 @@
           container.innerHTML += `
             <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 flex justify-between items-center text-xs">
               <div>
-                <div class="font-bold text-white">${p.title}</div>
+                <div class="font-bold text-white truncate max-w-[220px]">${p.title}</div>
                 <div class="text-[10px] text-slate-400">${Number(p.price).toLocaleString()} UZS • ${p.category}</div>
               </div>
               <button onclick="db.ref('projects/${p.id}').remove()" class="text-rose-400 hover:text-rose-300 p-2"><i class="fa-solid fa-trash-can"></i></button>
