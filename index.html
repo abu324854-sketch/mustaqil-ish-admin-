@@ -40,6 +40,22 @@
       </div>
     </div>
 
+    <!-- GEMINI API KALITINI SOZLASH -->
+    <div class="glass-box p-5 rounded-3xl border border-indigo-500/30">
+      <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
+        <i class="fa-solid fa-key text-amber-400 text-sm"></i> Gemini AI API Kalitini Sozlash (Hamma uchun)
+      </h2>
+      <form onsubmit="saveApiKey(event)" class="space-y-3">
+        <div>
+          <label class="block text-[11px] text-slate-400 mb-1">Google AI Studio API Key:</label>
+          <input type="text" id="adminApiKeyInput" required placeholder="AIzaSy..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+        </div>
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-xs transition">
+          API Kalitni Bazaga Saqlash
+        </button>
+      </form>
+    </div>
+
     <!-- AI PREMIUM OBUNA NARXINI SOZLASH -->
     <div class="glass-box p-5 rounded-3xl border border-indigo-500/30">
       <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
@@ -55,7 +71,6 @@
         </button>
       </form>
     </div>
-
     <!-- NASTROYKA: Karta Raqamlar -->
     <div class="glass-box p-5 rounded-3xl border border-slate-800">
       <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
@@ -73,7 +88,6 @@
       </form>
       <div id="adminCardsList" class="mt-3 space-y-2"></div>
     </div>
-
     <!-- YANGI LOYIHA QO'SHISH -->
     <div class="glass-box p-5 rounded-3xl border border-slate-800 shadow-2xl">
       <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
@@ -91,7 +105,7 @@
           <input type="number" id="pPrice" required placeholder="Narxi (Barchasiga bir xil) UZS" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none">
         </div>
         <div>
-          <label class="block text-[11px] text-slate-400 mb-1">Faylni Yuklang (ZIP bo'lsa ichidagilar alohida ajratiladi):</label>
+          <label class="block text-[11px] text-slate-400 mb-1">Faylni Yuklang (ZIP bo'lsa ichidagilar alohida ajratiladi):[cite: 6]</label>
           <div id="dropZone" class="border-2 border-dashed border-slate-700 bg-slate-900/60 rounded-2xl p-4 text-center cursor-pointer hover:border-indigo-500 transition relative">
             <i class="fa-solid fa-cloud-arrow-up text-2xl text-indigo-400 mb-1"></i>
             <p class="text-[11px] text-slate-300 font-semibold" id="fileStatusText">Faylni bosib tanlang yoki shu yerga tashlang (Ctrl+V)</p>
@@ -108,7 +122,6 @@
         </button>
       </form>
     </div>
-
     <!-- TALABALARDAN KELGAN BUYURTMALAR -->
     <div class="glass-box p-5 rounded-3xl border border-slate-800">
       <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
@@ -118,7 +131,6 @@
         <div class="text-center text-slate-500 text-xs py-2">Yuklanmoqda...</div>
       </div>
     </div>
-
     <!-- TO'LOV SO'ROVLARI VA RUXSATLAR -->
     <div class="glass-box p-5 rounded-3xl border border-slate-800">
       <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
@@ -128,7 +140,6 @@
         <div class="text-center text-slate-500 text-xs py-4">Yuklanmoqda...</div>
       </div>
     </div>
-
     <!-- MAVJUD LOYIHALAR -->
     <div class="glass-box p-5 rounded-3xl border border-slate-800">
       <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
@@ -137,7 +148,6 @@
       <div id="adminProjectsList" class="space-y-3"></div>
     </div>
   </main>
-
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDMmB0tW-JGizWSOdlFJJd68p6sksrlS_8",
@@ -155,10 +165,21 @@
     let uploadedFileData = null;
     let uploadedFileName = "";
 
+    // Gemini API kalitini bazadan o'qish va yozish
+    db.ref("settings/gemini_api_key").on("value", snap => {
+      if(snap.val()) document.getElementById('adminApiKeyInput').value = snap.val();
+    });
+    function saveApiKey(e) {
+      e.preventDefault();
+      const val = document.getElementById('adminApiKeyInput').value.trim();
+      db.ref("settings/gemini_api_key").set(val).then(() => {
+        alert("Gemini AI kaliti muvaffaqiyatli saqlandi!");
+      });
+    }
+
     db.ref("settings/ai_price").on("value", snap => {
       if(snap.val()) document.getElementById('aiPriceInput').value = snap.val();
     });
-
     function saveAiPrice(e) {
       e.preventDefault();
       const val = Number(document.getElementById('aiPriceInput').value);
@@ -166,7 +187,6 @@
         alert("AI Premium obuna narxi saqlandi!");
       });
     }
-
     const dropZone = document.getElementById('dropZone');
     ['dragenter', 'dragover'].forEach(eName => {
       dropZone.addEventListener(eName, (e) => { e.preventDefault(); dropZone.classList.add('drop-zone--over'); }, false);
@@ -178,12 +198,10 @@
       const files = e.dataTransfer.files;
       if (files.length) handleFileSelect(files[0]);
     });
-
     async function handleFileSelect(file) {
       if (!file) return;
       document.getElementById('fileStatusText').innerHTML = `<span class="text-indigo-400 font-bold"><i class="fa-solid fa-spinner fa-spin"></i> Fayl o'qilmoqda...</span>`;
       extractedFilesList = [];
-
       if (file.name.endsWith('.zip')) {
         try {
           const zip = new JSZip();
@@ -201,7 +219,7 @@
               }
             }
           }
-          document.getElementById('fileStatusText').innerHTML = `<span class="text-emerald-400 font-bold"><i class="fa-solid fa-circle-check"></i> ZIP ichidan ${count} ta fayl alohida ajratildi!</span>`;
+          document.getElementById('fileStatusText').innerHTML = `<span class="text-emerald-400 font-bold"><i class="fa-solid fa-circle-check"></i> ZIP ichidan ${count} ta fayl alohida ajratildi!</span>`;[cite: 6]
         } catch (err) {
           alert("ZIP faylni ochishda xatolik!");
         }
@@ -216,7 +234,6 @@
         reader.readAsDataURL(file);
       }
     }
-
     function blobToBase64(blob) {
       return new Promise((resolve, _) => {
         const reader = new FileReader();
@@ -224,7 +241,6 @@
         reader.readAsDataURL(blob);
       });
     }
-
     function saveCard(e) {
       e.preventDefault();
       db.ref("settings/cards").push().set({
@@ -236,7 +252,6 @@
         e.target.reset();
       });
     }
-
     db.ref("settings/cards").on("value", snapshot => {
       const container = document.getElementById('adminCardsList');
       container.innerHTML = '';
@@ -253,7 +268,6 @@
         });
       }
     });
-
     function saveProject(e) {
       e.preventDefault();
       if (extractedFilesList.length === 0) {
@@ -263,14 +277,12 @@
       const btn = document.getElementById('projSubmitBtn');
       btn.disabled = true;
       btn.innerText = "E'lon qilinmoqda...";
-
       const customTitle = document.getElementById('pTitle').value;
       const category = document.getElementById('pCategory').value;
       const price = Number(document.getElementById('pPrice').value);
       const fileUrl = document.getElementById('pFileUrl').value || null;
       const demoUrl = document.getElementById('pDemoUrl').value || null;
       const description = document.getElementById('pDesc').value;
-
       let promises = extractedFilesList.map((fileObj, index) => {
         let finalTitle = (extractedFilesList.length === 1 && customTitle) ? customTitle : fileObj.name;
         return db.ref("projects").push().set({
@@ -285,9 +297,8 @@
           createdAt: Date.now() + index
         });
       });
-
       Promise.all(promises).then(() => {
-        alert("Loyiha(lar) yuklandi va e'lon qilindi!");
+        alert("Loyiha(lar) yuklandi va e'lon qilindi!");[cite: 6]
         e.target.reset();
         extractedFilesList = [];
         document.getElementById('fileStatusText').innerText = "Faylni bosib tanlang yoki shu yerga tashlang (Ctrl+V)";
@@ -295,7 +306,6 @@
         btn.innerText = "Barchaga E'lon Qilish";
       });
     }
-
     db.ref("orders").on("value", snapshot => {
       const container = document.getElementById('ordersList');
       container.innerHTML = '';
@@ -318,7 +328,6 @@
         `;
       });
     });
-
     db.ref("projects").on("value", snapshot => {
       const container = document.getElementById('adminProjectsList');
       container.innerHTML = '';
@@ -340,7 +349,6 @@
         });
       }
     });
-
     db.ref("purchases").on("value", snapshot => {
       const list = document.getElementById('requestsList');
       list.innerHTML = '';
