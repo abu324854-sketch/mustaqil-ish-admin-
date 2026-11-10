@@ -4,60 +4,58 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EduProjects - Admin Panel</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
   <script>tailwind.config = { darkMode: 'class' }</script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <link href="[https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css](https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css)" rel="stylesheet">
+  <script src="[https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js](https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js)"></script>
+  <script src="[https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js](https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js)"></script>
   <style>
-    body { font-family: system-ui, -apple-system, sans-serif; }
-    .dark body { background: #070a13; color: #f8fafc; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #070a13; color: #f8fafc; }
     .glass-card { background: rgba(15,23,42,.85); border: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(16px); }
     .inp { width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: .75rem; padding: .6rem .75rem; font-size: .75rem; color: #fff; outline: none; }
     .inp:focus { border-color: #6366f1; }
   </style>
 </head>
 <body class="p-4 max-w-4xl mx-auto space-y-6">
-  <header class="glass-card p-4 rounded-2xl flex justify-between items-center">
-    <h1 class="text-base font-bold text-indigo-400"><i class="fa-solid fa-shield-halved"></i> EduProjects Admin Panel</h1>
-    <div class="text-xs text-slate-400" id="adminStats">Yuklanmoqda...</div>
+  <header class="glass-card p-4 rounded-2xl flex justify-between items-center border border-slate-800">
+    <div>
+      <h1 class="text-base font-bold text-indigo-400 flex items-center gap-2"><i class="fa-solid fa-shield-halved"></i> EduProjects Admin Panel</h1>
+      <p class="text-[11px] text-slate-400">Boshqaruv markazi va to'lovlar monitoringi</p>
+    </div>
+    <div class="text-xs text-slate-400 font-mono" id="adminStats">Yuklanmoqda...</div>
   </header>
 
-  <!-- LLOYIHA YOKI SILKA QO'SHISH -->
-  <section class="glass-card p-5 rounded-2xl space-y-4">
-    <h2 class="text-sm font-bold text-indigo-300"><i class="fa-solid fa-plus-circle"></i> Yangi Loyiha yoki Veb-sayt Silkasini Qo'shish</h2>
+  <!-- PROYEKT YOKI WEBSAYT SILKASI QO'SHISH -->
+  <section class="glass-card p-5 rounded-2xl space-y-4 border border-slate-800">
+    <h2 class="text-xs font-bold text-indigo-300 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-plus-circle"></i> Yangi Loyiha yoki Veb-Sayt Silkasi Qo'shish</h2>
     <form onsubmit="addNewProject(event)" class="space-y-3">
       <div class="grid grid-cols-2 gap-3">
-        <input type="text" id="pTitle" required placeholder="Loyiha nomi" class="inp">
-        <input type="text" id="pCategory" required placeholder="Kategoriya (masalan: Dasturlash)" class="inp">
+        <input type="text" id="pTitle" required placeholder="Loyiha yoki Veb-sayt nomi" class="inp">
+        <input type="text" id="pCategory" required placeholder="Kategoriya (masalan: Dasturlash, Veb-sayt)" class="inp">
       </div>
       <div class="grid grid-cols-2 gap-3">
         <input type="number" id="pPrice" required placeholder="Narxi (UZS)" class="inp">
-        <input type="text" id="pUrl" placeholder="Veb-sayt silkasi (https://...) — ixtiyoriy" class="inp">
+        <input type="url" id="pUrl" placeholder="Veb-sayt silkasi (https://...) — ixtiyoriy" class="inp">
       </div>
-      <textarea id="pDesc" rows="2" placeholder="Qisqacha tavsif" class="inp"></textarea>
-      <div class="flex items-center gap-2">
-        <label class="text-xs text-slate-400">Fayl biriktirish (agar silka bo'lmasa):</label>
-        <input type="file" id="pFile" class="text-xs text-slate-400">
+      <textarea id="pDesc" rows="2" placeholder="Loyiha haqida batafsil ma'lumot..." class="inp"></textarea>
+      <div class="flex items-center gap-2 bg-slate-900/50 p-2.5 rounded-xl border border-slate-800">
+        <label class="text-xs text-slate-400 whitespace-nowrap">Fayl yuklash (.zip/.doc/.pdf):</label>
+        <input type="file" id="pFile" class="text-xs text-slate-400 w-full file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-slate-800 file:text-indigo-300">
       </div>
-      <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 py-2.5 rounded-xl text-xs font-bold text-white">Loyihani Qo'shish</button>
+      <button type="submit" id="saveBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 py-3 rounded-xl text-xs font-bold text-white transition-all">Loyihani Platformaga Joylash</button>
     </form>
   </section>
 
   <!-- KUTILAYOTGAN TO'LOVLAR -->
-  <section class="glass-card p-5 rounded-2xl space-y-4">
-    <h2 class="text-sm font-bold text-amber-400"><i class="fa-solid fa-receipt"></i> To'lov Cheklari (Tasdiqlash Kutilmoqda)</h2>
-    <div id="pendingPurchases" class="space-y-3">
-      <div class="text-xs text-slate-500">Kutilayotgan to'lovlar yo'q.</div>
-    </div>
+  <section class="glass-card p-5 rounded-2xl space-y-4 border border-amber-500/20">
+    <h2 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-receipt"></i> Kutilayotgan To'lov Cheklari</h2>
+    <div id="pendingPurchases" class="space-y-3"><div class="text-xs text-slate-500">Tekshirilmoqda...</div></div>
   </section>
 
-  <!-- BARCHA YUKLANGAN LOYIHALAR VA FAYLLAR -->
-  <section class="glass-card p-5 rounded-2xl space-y-4">
-    <h2 class="text-sm font-bold text-emerald-400"><i class="fa-solid fa-folder-tree"></i> Barcha Yuklangan Loyihalar (Eski va Yangi fayllar)</h2>
-    <div id="adminProjectsList" class="space-y-2">
-      <div class="text-xs text-slate-500">Loyihalar yuklanmoqda...</div>
-    </div>
+  <!-- PLATFORMADAGI BARCHA ISHLAR -->
+  <section class="glass-card p-5 rounded-2xl space-y-4 border border-slate-800">
+    <h2 class="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-folder-tree"></i> Barcha Yuklangan Loyihalar va Fayllar</h2>
+    <div id="adminProjectsList" class="space-y-2"><div class="text-xs text-slate-500">Yuklanmoqda...</div></div>
   </section>
 
   <script>
@@ -65,7 +63,7 @@
       apiKey: "AIzaSyDMmB0tW-JGizWSOdlFJJd68p6sksrlS_8",
       authDomain: "mustaqil-ish-63c2c.firebaseapp.com",
       projectId: "mustaqil-ish-63c2c",
-      databaseURL: "https://mustaqil-ish-63c2c-default-rtdb.firebaseio.com",
+      databaseURL: "[https://mustaqil-ish-63c2c-default-rtdb.firebaseio.com](https://mustaqil-ish-63c2c-default-rtdb.firebaseio.com)",
       storageBucket: "mustaqil-ish-63c2c.firebasestorage.app",
       messagingSenderId: "577427329404",
       appId: "1:577427329404:web:e3ac004474ff1c9d5454f9"
@@ -73,98 +71,119 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const $ = id => document.getElementById(id);
+    function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
-    // Loyihalar va cheklarni yuklash
     db.ref('projects').on('value', snap => {
       const data = snap.val();
       const projects = data ? Object.keys(data).map(k => ({ id: k, ...data[k] })) : [];
-      
-      $('adminStats').textContent = `Jami loyihalar: ${projects.length} ta`;
+      $('adminStats').textContent = `Platformadagi loyihalar: ${projects.length} ta`;
       
       if (!projects.length) {
-        $('adminProjectsList').innerHTML = '<div class="text-xs text-slate-500">Hali loyihalar qo\'shilmagan.</div>';
+        $('adminProjectsList').innerHTML = '<div class="text-xs text-slate-500 text-center py-4">Bazada loyihalar topilmadi.</div>';
         return;
       }
 
       $('adminProjectsList').innerHTML = projects.reverse().map(p => `
         <div class="bg-slate-900/60 border border-slate-800 p-3 rounded-xl flex justify-between items-center text-xs">
-          <div>
-            <div class="font-bold text-white">${esc(p.title)} <span class="text-[10px] text-indigo-400">(${esc(p.category)})</span></div>
-            <div class="text-[10px] text-slate-400">Narxi: ${Number(p.price).toLocaleString()} UZS · ${p.fileUrl ? '🌐 Silka mavjud' : '📁 Fayl mavjud'}</div>
+          <div class="space-y-1">
+            <div class="font-bold text-white">${esc(p.title)} <span class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[10px] px-2 py-0.5 rounded-md ml-1">${esc(p.category)}</span></div>
+            <div class="text-[10px] text-slate-400">Narxi: <b>${Number(p.price).toLocaleString()} UZS</b> · ${p.fileUrl ? `<a href="${esc(p.fileUrl)}" target="_blank" class="text-emerald-400 underline">🌐 Sayt silkasi</a>` : (p.fileName ? `📁 ${esc(p.fileName)}` : '📁 Fayl biriktirilgan')}</div>
           </div>
-          <button onclick="deleteProject('${p.id}')" class="bg-rose-600/20 text-rose-400 px-3 py-1 rounded-lg text-xs hover:bg-rose-600 hover:text-white">O'chirish</button>
+          <button onclick="deleteProject('${p.id}')" class="bg-rose-600/20 text-rose-400 border border-rose-500/30 px-3 py-1.5 rounded-xl text-xs hover:bg-rose-600 hover:text-white transition-all"><i class="fa-solid fa-trash-can"></i> O'chirish</button>
         </div>
       `).join('');
     });
 
-    // To'lovlarni kuzatish
     db.ref('purchases').on('value', snap => {
       const data = snap.val();
       const purchases = data ? Object.keys(data).map(k => ({ id: k, ...data[k] })) : [];
       const pending = purchases.filter(p => p.status === 'pending');
 
       if (!pending.length) {
-        $('pendingPurchases').innerHTML = '<div class="text-xs text-slate-500">Yangi to\'lov cheklari yo\'q.</div>';
+        $('pendingPurchases').innerHTML = '<div class="text-xs text-slate-500 text-center py-4">Kutilayotgan to\'lovlar mavjud emas.</div>';
         return;
       }
 
       $('pendingPurchases').innerHTML = pending.map(r => `
-        <div class="bg-slate-900 border border-amber-500/30 p-3 rounded-xl flex flex-col gap-2 text-xs">
-          <div class="flex justify-between">
-            <span><b>${esc(r.studentName)}</b> (${esc(r.studentContact)})</span>
-            <span class="text-amber-400 font-bold">${Number(r.paidAmount).toLocaleString()} UZS</span>
+        <div class="bg-slate-900 border border-amber-500/30 p-3.5 rounded-xl flex flex-col gap-2 text-xs">
+          <div class="flex justify-between items-center">
+            <div><b class="text-indigo-300">${esc(r.studentName)}</b> <span class="text-slate-400">(${esc(r.studentContact)})</span></div>
+            <span class="text-amber-400 font-extrabold text-sm">${Number(r.paidAmount).toLocaleString()} UZS</span>
           </div>
-          ${r.receiptData ? `<a href="${r.receiptData}" target="_blank" class="text-indigo-400 underline">Chek rasmini ko'rish</a>` : ''}
-          <div class="flex gap-2 mt-1">
-            <button onclick="updatePurchase('${r.id}', 'approved')" class="bg-emerald-600 text-white px-3 py-1 rounded-lg font-bold">Tasdiqlash</button>
-            <button onclick="updatePurchase('${r.id}', 'revoked')" class="bg-rose-600 text-white px-3 py-1 rounded-lg">Rad etish</button>
+          <div class="flex justify-between items-center pt-1 border-t border-slate-800">
+            <button onclick="viewReceipt('${r.id}')" class="text-xs text-indigo-400 underline"><i class="fa-solid fa-image"></i> Chek rasmini ochish</button>
+            <div class="flex gap-2">
+              <button onclick="updatePurchase('${r.id}', 'approved')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl font-bold text-xs"><i class="fa-solid fa-check"></i> Tasdiqlash</button>
+              <button onclick="updatePurchase('${r.id}', 'revoked')" class="bg-rose-600 hover:bg-rose-500 text-white px-3 py-1.5 rounded-xl text-xs"><i class="fa-solid fa-xmark"></i> Rad etish</button>
+            </div>
           </div>
         </div>
       `).join('');
     });
 
+    async function viewReceipt(id) {
+      const snap = await db.ref('receipts/' + id).once('value');
+      const data = snap.val()?.data;
+      if (data) {
+        const w = window.open("");
+        w.document.write(`<img src="${data}" style="max-width:100%"/>`);
+      } else {
+        alert("Chek rasmi topilmadi!");
+      }
+    }
+
     async function addNewProject(e) {
       e.preventDefault();
-      const title = $('pTitle').value.trim();
-      const category = $('pCategory').value.trim();
-      const price = Number($('pPrice').value);
-      const description = $('pDesc').value.trim();
-      const fileUrl = $('pUrl').value.trim();
-      const fileInput = $('pFile').files[0];
+      const btn = $('saveBtn'); btn.disabled = true; btn.textContent = 'Saqlanmoqda...';
+      try {
+        const title = $('pTitle').value.trim();
+        const category = $('pCategory').value.trim();
+        const price = Number($('pPrice').value);
+        const description = $('pDesc').value.trim();
+        const fileUrl = $('pUrl').value.trim();
+        const fileInput = $('pFile').files[0];
 
-      let fileData = null;
-      let fileName = null;
+        let fileData = null;
+        let fileName = null;
 
-      if (fileInput) {
-        fileName = fileInput.name;
-        fileData = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = e => resolve(e.target.result);
-          reader.readAsDataURL(fileInput);
+        if (fileInput) {
+          fileName = fileInput.name;
+          fileData = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = e => resolve(e.target.result);
+            reader.onerror = () => reject(new Error("Faylni o'qishda xato"));
+            reader.readAsDataURL(fileInput);
+          });
+        }
+
+        const newRef = db.ref('projects').push();
+        await newRef.set({
+          title, category, price, description, fileUrl: fileUrl || null, fileName, createdAt: Date.now()
         });
+
+        if (fileData) {
+          await db.ref('project_files/' + newRef.key).set({ data: fileData });
+        }
+
+        alert("Loyiha muvaffaqiyatli saqlandi!");
+        e.target.reset();
+      } catch (err) {
+        alert("Xato: " + err.message);
+      } finally {
+        btn.disabled = false; btn.textContent = 'Loyihani Platformaga Joylash';
       }
-
-      await db.ref('projects').push({
-        title, category, price, description, fileUrl: fileUrl || null, fileData, fileName, createdAt: Date.now()
-      });
-
-      alert("Muvaffaqiyatli qo'shildi!");
-      e.target.reset();
     }
 
     async function updatePurchase(id, status) {
       await db.ref('purchases/' + id).update({ status });
-      alert("Holat yangilandi: " + status);
     }
 
     async function deleteProject(id) {
-      if (confirm("Haqiqatan ham o'chirmoqchimisiz?")) {
+      if (confirm("Ushbu loyihani o'chirishga ishonchingiz komilmi?")) {
         await db.ref('projects/' + id).remove();
-        alert("O'chirildi!");
+        await db.ref('project_files/' + id).remove();
       }
     }
-
-    function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
   </script>
 </body>
 </html>
