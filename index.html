@@ -3,276 +3,586 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PRO Admin Control Panel</title>
+  <title>PRO Admin Control Panel — EduProjects</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
   <style>
-    body { background-color: #070a12; color: #f8fafc; font-family: sans-serif; }
-    .glass-box { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
-    .drop-zone--over { border-color: #6366f1 !important; background-color: rgba(99, 102, 241, 0.1) !important; }
+    body { background: #070a12; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
+    .glass-box { background: rgba(15,23,42,.8); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,.08); }
+    .drop-zone--over { border-color: #6366f1 !important; background: rgba(99,102,241,.1) !important; }
+    .inp { width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: .75rem; padding: .6rem .75rem; font-size: .75rem; color: #fff; outline: none; }
+    .inp:focus { border-color: #6366f1; }
+    .inp::placeholder { color: #64748b; }
+    .panel { background: #020617; border: 1px solid #1e293b; border-radius: 1rem; padding: .9rem; font-size: .75rem; line-height: 1.6; color: #cbd5e1; white-space: pre-line; }
+    .panel h3 { font-weight: 700; font-size: .85rem; margin: .8rem 0 .2rem; color: #a5b4fc; }
+    .tbtn { background: rgba(99,102,241,.2); color: #a5b4fc; border-radius: .5rem; padding: .25rem .6rem; font-size: .68rem; }
+    .tbtn:hover { background: #4f46e5; color: #fff; }
+    .bar { height: .5rem; border-radius: 999px; background: #1e293b; overflow: hidden; }
+    .bar > i { display: block; height: 100%; border-radius: 999px; }
+    #toasts { position: fixed; z-index: 100; left: 50%; transform: translateX(-50%); bottom: 1.2rem; display: flex; flex-direction: column; gap: .4rem; width: min(92vw, 380px); }
+    .toast { background: #1e293b; color: #fff; padding: .6rem .9rem; border-radius: .8rem; font-size: .75rem; box-shadow: 0 8px 24px rgba(0,0,0,.4); transition: opacity .3s; border-left: 4px solid #6366f1; }
+    .toast-ok { border-color: #10b981; } .toast-warn { border-color: #f59e0b; } .toast-err { border-color: #ef4444; }
+    .dots span { display: inline-block; width: 6px; height: 6px; margin: 0 2px; background: #818cf8; border-radius: 50%; animation: b 1s infinite; }
+    .dots span:nth-child(2) { animation-delay: .15s; } .dots span:nth-child(3) { animation-delay: .3s; }
+    @keyframes b { 0%,80%,100% { transform: translateY(0); opacity: .4 } 40% { transform: translateY(-5px); opacity: 1 } }
+    .chart { display: flex; align-items: flex-end; gap: .4rem; height: 90px; }
+    .chart > div { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; font-size: 9px; color: #94a3b8; }
+    .chart i { display: block; width: 100%; background: linear-gradient(#6366f1, #4338ca); border-radius: .35rem .35rem 0 0; min-height: 2px; }
   </style>
 </head>
 <body class="pb-16">
-  <header class="sticky top-0 z-40 glass-box px-4 py-4 flex justify-between items-center border-b border-slate-800">
+  <header class="sticky top-0 z-40 glass-box px-4 py-3 flex justify-between items-center border-b border-slate-800">
     <div class="flex items-center space-x-2">
-      <span class="bg-indigo-600/20 text-indigo-400 p-2 rounded-xl border border-indigo-500/20">
-        <i class="fa-solid fa-shield-halved text-lg"></i>
-      </span>
-      <div>
-        <h1 class="text-sm font-bold text-white leading-tight">Admin Control Panel</h1>
-        <p class="text-[10px] text-slate-400">EduProjects Tizimi (Boshqaruv)</p>
-      </div>
+      <span class="bg-indigo-600/20 text-indigo-400 p-2 rounded-xl border border-indigo-500/20"><i class="fa-solid fa-shield-halved text-lg"></i></span>
+      <div><h1 class="text-sm font-bold text-white leading-tight">Admin Control Panel</h1><p class="text-[10px] text-slate-400">EduProjects · AI boshqaruv</p></div>
     </div>
+    <div id="aiPill" class="text-[10px] px-2 py-1 rounded-full bg-slate-800 text-slate-400">AI: tekshirilmagan</div>
   </header>
-  <main class="max-w-md mx-auto px-4 mt-6 space-y-6">
-    <!-- Analytics Dashboard -->
+
+  <main class="max-w-md mx-auto px-4 mt-5 space-y-5">
+
+    <!-- STATISTIKA -->
     <div class="grid grid-cols-2 gap-3">
-      <div class="glass-box p-4 rounded-2xl border border-slate-800">
-        <div class="text-[10px] text-slate-400 uppercase font-semibold">Tushgan So'rovlar</div>
-        <div class="text-xl font-extrabold text-white mt-1" id="statPending">0</div>
-      </div>
-      <div class="glass-box p-4 rounded-2xl border border-slate-800">
-        <div class="text-[10px] text-emerald-400 uppercase font-semibold">Jami Daromad</div>
-        <div class="text-lg font-extrabold text-emerald-400 mt-1" id="statRevenue">0 UZS</div>
-      </div>
+      <div class="glass-box p-4 rounded-2xl"><div class="text-[10px] text-slate-400 uppercase font-semibold">Kutilayotgan</div><div class="text-xl font-extrabold text-amber-400 mt-1" id="statPending">0</div></div>
+      <div class="glass-box p-4 rounded-2xl"><div class="text-[10px] text-emerald-400 uppercase font-semibold">Jami daromad</div><div class="text-lg font-extrabold text-emerald-400 mt-1" id="statRevenue">0 UZS</div></div>
+      <div class="glass-box p-4 rounded-2xl"><div class="text-[10px] text-slate-400 uppercase font-semibold">Faol AI PRO</div><div class="text-xl font-extrabold text-white mt-1" id="statPro">0</div></div>
+      <div class="glass-box p-4 rounded-2xl"><div class="text-[10px] text-slate-400 uppercase font-semibold">Bugungi AI so'rov</div><div class="text-xl font-extrabold text-indigo-300 mt-1" id="statAi">0</div></div>
     </div>
 
-    <!-- GEMINI API KALITINI SOZLASH -->
-    <div class="glass-box p-5 rounded-3xl border border-indigo-500/30">
-      <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
-        <i class="fa-solid fa-key text-amber-400 text-sm"></i> Gemini AI API Kalitini Sozlash (Hamma uchun)
-      </h2>
-      <form onsubmit="saveApiKey(event)" class="space-y-3">
-        <div>
-          <label class="block text-[11px] text-slate-400 mb-1">Google AI Studio API Key:</label>
-          <input type="text" id="adminApiKeyInput" required placeholder="AIzaSy..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
-        </div>
-        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-xs transition">
-          API Kalitni Bazaga Saqlash
-        </button>
-      </form>
+    <!-- DAROMAD GRAFIGI + AI TAHLIL -->
+    <div class="glass-box p-5 rounded-3xl space-y-3">
+      <h2 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-chart-column text-indigo-400"></i> Oxirgi 7 kun daromadi</h2>
+      <div id="revChart" class="chart"></div>
+      <div id="aiToolStats" class="text-[10px] text-slate-400"></div>
+      <button onclick="aiInsights()" class="w-full bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold py-2.5 rounded-xl text-xs"><i class="fa-solid fa-wand-magic-sparkles"></i> AI biznes tahlili va maslahat</button>
+      <div id="insightsOut"></div>
     </div>
 
-    <!-- AI PREMIUM OBUNA NARXINI SOZLASH -->
-    <div class="glass-box p-5 rounded-3xl border border-indigo-500/30">
-      <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
-        <i class="fa-solid fa-robot text-indigo-400 text-sm"></i> AI Premium Obuna Narxini Sozlash
-      </h2>
-      <form onsubmit="saveAiPrice(event)" class="space-y-3">
-        <div>
-          <label class="block text-[11px] text-slate-400 mb-1">1 Oylik AI PRO Premium Narxi (UZS):</label>
-          <input type="number" id="aiPriceInput" required placeholder="Masalan: 25000" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
-        </div>
-        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-xs transition">
-          AI Premium Narxini Saqlash
-        </button>
-      </form>
-    </div>
-
-    <!-- FORUM MUXOKAMALARINI NAZORAT QILISH -->
-    <div class="glass-box p-5 rounded-3xl border border-pink-500/30">
-      <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
-        <i class="fa-solid fa-comments text-pink-400 text-sm"></i> Ilmiy Forum Chat Monitoringi
-      </h2>
-      <div id="adminForumList" class="space-y-2 max-h-48 overflow-y-auto text-xs"></div>
-    </div>
-
-    <!-- NASTROYKA: Karta Raqamlar -->
-    <div class="glass-box p-5 rounded-3xl border border-slate-800">
-      <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
-        <i class="fa-solid fa-credit-card text-emerald-400 text-sm"></i> Nastroyka: Karta Raqamlar Qo'shish
-      </h2>
-      <form onsubmit="saveCard(event)" class="space-y-3">
-        <input type="text" id="cNumber" required placeholder="Karta raqami (8600 ...)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+    <!-- AI SOZLAMALAR -->
+    <div class="glass-box p-5 rounded-3xl border border-indigo-500/30 space-y-3">
+      <h2 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-key text-amber-400"></i> AI sozlamalari</h2>
+      <div class="text-[10px] text-slate-400 leading-relaxed">🔒 <b>Xavfsiz usul:</b> Vercel → Environment Variables → <code class="text-indigo-300">GEMINI_API_KEY</code> va loyihaga <code class="text-indigo-300">api/ai.js</code> faylini qo'shing. Shunda kalit hech kimga ko'rinmaydi. Quyidagi kalit — zaxira usul (u bazada saqlanadi va ochiq o'qiladi).</div>
+      <form onsubmit="saveSettings(event)" class="space-y-2">
+        <div class="flex gap-2"><input type="password" id="adminApiKeyInput" placeholder="Zaxira Gemini API kaliti (AIzaSy...)" class="inp"><button type="button" class="tbtn" onclick="const i=$('adminApiKeyInput');i.type=i.type==='password'?'text':'password'"><i class="fa-solid fa-eye"></i></button></div>
         <div class="grid grid-cols-2 gap-2">
-          <input type="text" id="cHolder" required placeholder="F.I.O (Masalan: Fattoxov A.)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
-          <input type="text" id="cBank" required placeholder="Bank nomi (Uzcard/Humo)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+          <div><label class="block text-[10px] text-slate-400 mb-1">AI model</label><input id="modelInput" class="inp" placeholder="gemini-3.8-flash"></div>
+          <div><label class="block text-[10px] text-slate-400 mb-1">Kunlik bepul AI limit</label><input type="number" min="0" id="freeLimitInput" class="inp" placeholder="5"></div>
         </div>
-        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs transition">
-          Karta Qo'shish
-        </button>
+        <div><label class="block text-[10px] text-slate-400 mb-1">1 oylik AI PRO narxi (UZS)</label><input type="number" id="aiPriceInput" class="inp" placeholder="25000"></div>
+        <div class="flex gap-2">
+          <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-xs">Saqlash</button>
+          <button type="button" onclick="testAI()" class="bg-slate-800 hover:bg-slate-700 text-indigo-300 font-bold px-4 rounded-xl text-xs">AI'ni sinash</button>
+        </div>
       </form>
-      <div id="adminCardsList" class="mt-3 space-y-2"></div>
     </div>
 
-    <!-- YANGI LOYIHA QO'SHISH -->
-    <div class="glass-box p-5 rounded-3xl border border-slate-800 shadow-2xl">
-      <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
-        <i class="fa-solid fa-plus-circle text-indigo-400 text-sm"></i> Yangi Loyiha Qo'shish
-      </h2>
+    <!-- TO'LOVLAR -->
+    <div class="glass-box p-5 rounded-3xl space-y-3">
+      <div class="flex justify-between items-center">
+        <h2 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-receipt text-amber-400"></i> Kelgan to'lovlar</h2>
+        <select id="payFilter" class="inp" style="width:auto" onchange="renderPurchases()"><option value="pending">Kutilayotgan</option><option value="all">Hammasi</option><option value="approved">Tasdiqlangan</option><option value="revoked">Rad etilgan</option></select>
+      </div>
+      <div class="text-[10px] text-slate-400">🤖 “AI chek tekshiruvi” chek rasmini o'qib, summa/karta/takrorlanishni solishtiradi. Bu <b>maslahat</b> — yakuniy qaror sizda.</div>
+      <div id="requestsList" class="space-y-3"><div class="text-center text-slate-500 text-xs py-4">Yuklanmoqda...</div></div>
+    </div>
+
+    <!-- YANGI LOYIHA -->
+    <div class="glass-box p-5 rounded-3xl shadow-2xl space-y-3">
+      <h2 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-plus-circle text-indigo-400"></i> Yangi loyiha qo'shish</h2>
       <form onsubmit="saveProject(event)" class="space-y-3">
-        <input type="text" id="pTitle" placeholder="Loyiha Nomi (ZIP yuklansa majburiy emas)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none">
-        
+        <div id="dropZone" class="border-2 border-dashed border-slate-700 bg-slate-900/60 rounded-2xl p-4 text-center cursor-pointer hover:border-indigo-500 transition relative">
+          <i class="fa-solid fa-cloud-arrow-up text-2xl text-indigo-400 mb-1"></i>
+          <p class="text-[11px] text-slate-300 font-semibold" id="fileStatusText">Faylni bosib tanlang yoki shu yerga tashlang</p>
+          <span class="text-[9px] text-slate-500">.zip, .docx, .pdf, .pptx — maks 7 MB</span>
+          <input type="file" id="fileInput" onchange="handleFileSelect(this.files[0])" class="absolute inset-0 opacity-0 cursor-pointer">
+        </div>
+        <input type="url" id="pFileUrl" placeholder="Yoki fayl havolasi (Google Drive va h.k.)" class="inp">
+        <input type="text" id="pTitle" placeholder="Loyiha nomi (bo'sh qolsa, fayl nomidan olinadi)" class="inp">
         <div class="grid grid-cols-2 gap-2">
-          <select id="pCategory" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-2 py-2.5 text-xs text-white focus:outline-none">
-            <option value="Mustaqil ish">Mustaqil ish</option>
-            <option value="Veb-sayt">Veb-sayt</option>
-            <option value="Kurs ishi">Kurs ishi</option>
-          </select>
-          <input type="number" id="pPrice" required placeholder="Narxi UZS" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none">
+          <select id="pCategory" class="inp"><option>Mustaqil ish</option><option>Veb-sayt</option><option>Kurs ishi</option><option>Referat</option><option>Taqdimot</option></select>
+          <input type="number" id="pPrice" required placeholder="Narxi UZS" class="inp">
         </div>
-        <div>
-          <label class="block text-[11px] text-slate-400 mb-1">Faylni Yuklang (ZIP bo'lsa ajratiladi):</label>
-          <div id="dropZone" class="border-2 border-dashed border-slate-700 bg-slate-900/60 rounded-2xl p-4 text-center cursor-pointer hover:border-indigo-500 transition relative">
-            <i class="fa-solid fa-cloud-arrow-up text-2xl text-indigo-400 mb-1"></i>
-            <p class="text-[11px] text-slate-300 font-semibold" id="fileStatusText">Faylni bosib tanlang yoki shu yerga tashlang</p>
-            <span class="text-[9px] text-slate-500">.zip, .docx, .pdf, .pptx, .rar</span>
-            <input type="file" id="fileInput" onchange="handleFileSelect(this.files[0])" class="absolute inset-0 opacity-0 cursor-pointer">
-          </div>
-        </div>
-        
-        <input type="url" id="pFileUrl" placeholder="Yoki Fayl Linki" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none">
-        <textarea id="pDesc" rows="2" placeholder="Batafsil tavsif..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none"></textarea>
-        <button type="submit" id="projSubmitBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl text-xs transition">
-          Barchaga E'lon Qilish
-        </button>
+        <div id="priceHint" class="text-[10px] text-indigo-300 hidden"></div>
+        <textarea id="pDesc" rows="3" placeholder="Batafsil tavsif..." class="inp"></textarea>
+        <button type="button" onclick="aiDescribe()" id="aiDescBtn" class="w-full bg-violet-600/80 hover:bg-violet-500 text-white font-bold py-2.5 rounded-xl text-xs"><i class="fa-solid fa-wand-magic-sparkles"></i> AI bilan nom va tavsif yozish</button>
+        <button type="submit" id="projSubmitBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl text-xs">Barchaga e'lon qilish</button>
       </form>
     </div>
 
-    <!-- TO'LOV SO'ROVLARI VA RUXSATLAR -->
-    <div class="glass-box p-5 rounded-3xl border border-slate-800">
-      <h2 class="text-xs font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
-        <i class="fa-solid fa-receipt text-amber-400 text-sm"></i> Kelib Tushgan To'lovlar
-      </h2>
-      <div id="requestsList" class="space-y-3">
-        <div class="text-center text-slate-500 text-xs py-4">Yuklanmoqda...</div>
-      </div>
+    <!-- LOYIHALAR RO'YXATI -->
+    <div class="glass-box p-5 rounded-3xl space-y-3">
+      <h2 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-folder-open text-sky-400"></i> E'lon qilingan loyihalar</h2>
+      <div id="projectsAdminList" class="space-y-2 text-xs"></div>
     </div>
+
+    <!-- FORUM -->
+    <div class="glass-box p-5 rounded-3xl space-y-3 border border-pink-500/30">
+      <div class="flex justify-between items-center">
+        <h2 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-comments text-pink-400"></i> Forum monitoringi</h2>
+        <button onclick="aiModerate()" id="modBtn" class="tbtn"><i class="fa-solid fa-shield-halved"></i> AI moderatsiya</button>
+      </div>
+      <div id="adminForumList" class="space-y-2 max-h-64 overflow-y-auto text-xs"></div>
+    </div>
+
+    <!-- KARTALAR -->
+    <div class="glass-box p-5 rounded-3xl space-y-3">
+      <h2 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-credit-card text-emerald-400"></i> To'lov kartalari</h2>
+      <form onsubmit="saveCard(event)" class="space-y-2">
+        <input id="cNumber" required placeholder="Karta raqami (8600 ...)" class="inp">
+        <div class="grid grid-cols-2 gap-2"><input id="cHolder" required placeholder="F.I.O" class="inp"><input id="cBank" required placeholder="Bank (Uzcard/Humo)" class="inp"></div>
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs">Karta qo'shish</button>
+      </form>
+      <div id="adminCardsList" class="space-y-2"></div>
+    </div>
+
+    <footer class="text-center text-[10px] text-slate-500 pt-2">© EduProjects · Muallif: <b>Fattoxov Abdulloh</b></footer>
   </main>
 
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDMmB0tW-JGizWSOdlFJJd68p6sksrlS_8",
-      authDomain: "mustaqil-ish-63c2c.firebaseapp.com",
-      projectId: "mustaqil-ish-63c2c",
-      databaseURL: "https://mustaqil-ish-63c2c-default-rtdb.firebaseio.com",
-      storageBucket: "mustaqil-ish-63c2c.firebasestorage.app",
-      messagingSenderId: "577427329404",
-      appId: "1:577427329404:web:e3ac004474ff1c9d5454f9"
+/* ===== EduProjects CORE (ikkala sahifa uchun umumiy) ===== */
+const firebaseConfig = {
+  apiKey: "AIzaSyDMmB0tW-JGizWSOdlFJJd68p6sksrlS_8",
+  authDomain: "mustaqil-ish-63c2c.firebaseapp.com",
+  projectId: "mustaqil-ish-63c2c",
+  databaseURL: "https://mustaqil-ish-63c2c-default-rtdb.firebaseio.com",
+  storageBucket: "mustaqil-ish-63c2c.firebasestorage.app",
+  messagingSenderId: "577427329404",
+  appId: "1:577427329404:web:e3ac004474ff1c9d5454f9"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+/* ---------- Yordamchilar ---------- */
+const $ = id => document.getElementById(id);
+const ls = {
+  get(k, d = null) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+};
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+// Xavfsiz mini-markdown (avval escape, keyin belgilash)
+function md(t) {
+  let h = esc(t);
+  h = h.replace(/```(\w*)\n?([\s\S]*?)```/g, (m, l, c) => `<pre class="code">${c}</pre>`);
+  h = h.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+  h = h.replace(/^#{1,2} (.*)$/gm, '<h3>$1</h3>').replace(/^#{3,4} (.*)$/gm, '<h4>$1</h4>');
+  h = h.replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>');
+  h = h.replace(/(^|\n)[-*] /g, '$1• ');
+  return h;
+}
+const STORE = [];                       // matnlarni inline-handlerlarga xavfsiz uzatish uchun
+const keep = t => STORE.push(String(t)) - 1;
+const fmt = n => Number(n || 0).toLocaleString('ru-RU').replace(/ /g, ' ');
+const todayKey = () => new Date().toISOString().slice(0, 10);
+
+function toast(msg, type = 'info') {
+  let box = $('toasts');
+  if (!box) { box = document.createElement('div'); box.id = 'toasts'; document.body.appendChild(box); }
+  const el = document.createElement('div');
+  el.className = 'toast toast-' + type;
+  el.textContent = msg;
+  box.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3800);
+}
+function copyText(i) {
+  const t = STORE[i];
+  (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(
+    () => toast('Nusxa olindi', 'ok'),
+    () => { const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); toast('Nusxa olindi', 'ok'); } catch (e) {} a.remove(); }
+  );
+}
+function speakIdx(i, lang = 'uz-UZ') {
+  if (!('speechSynthesis' in window)) return toast("Brauzer ovozli o'qishni qo'llamaydi", 'warn');
+  const s = window.speechSynthesis;
+  if (s.speaking) { s.cancel(); return; }
+  const u = new SpeechSynthesisUtterance(STORE[i].replace(/[*#`]/g, ''));
+  u.lang = lang;
+  const v = s.getVoices();
+  if (v.length && !v.some(x => x.lang.toLowerCase().startsWith(lang.slice(0, 2)))) toast("Qurilmada bu til uchun ovoz topilmadi", 'warn');
+  s.speak(u);
+}
+function printHTML(title, html) {
+  const f = document.createElement('iframe');
+  f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
+  document.body.appendChild(f);
+  const d = f.contentWindow.document;
+  d.open();
+  d.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>body{font-family:Arial,sans-serif;font-size:12pt;line-height:1.5;color:#111;padding:24px}h3{margin:14px 0 4px;border-bottom:1px solid #ccc;padding-bottom:2px}</style></head><body>${html}</body></html>`);
+  d.close();
+  setTimeout(() => { f.contentWindow.focus(); f.contentWindow.print(); setTimeout(() => f.remove(), 2000); }, 300);
+}
+function downloadDoc(title, bodyHtml) {
+  const html = '﻿<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>' + esc(title) +
+    '</title><style>body{font-family:"Times New Roman";font-size:14pt;line-height:1.5}h1{text-align:center;font-size:18pt}h2{font-size:15pt;margin-top:18pt}p{text-align:justify;text-indent:1.25cm;margin:0 0 6pt}</style></head><body>' + bodyHtml + '</body></html>';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([html], { type: 'application/msword' }));
+  a.download = title.replace(/[^\p{L}\p{N} _-]/gu, '').slice(0, 60).trim() + '.doc';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+// Rasmni kichraytirish (chek, AI uchun rasm) -> dataURL
+function compressImage(file, maxDim = 1000, q = 0.75) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onerror = () => rej(new Error("Faylni o'qib bo'lmadi"));
+    r.onload = () => {
+      const img = new Image();
+      img.onerror = () => rej(new Error("Rasm formati noto'g'ri"));
+      img.onload = () => {
+        const k = Math.min(1, maxDim / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        res(c.toDataURL('image/jpeg', q));
+      };
+      img.src = r.result;
     };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    r.readAsDataURL(file);
+  });
+}
+function hashStr(s) { let h = 2166136261; for (let i = 0; i < s.length; i += 7) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36) + s.length.toString(36); }
+function dataUrlParts(u) { const m = /^data:([^;]+);base64,(.*)$/.exec(u || ''); return m ? { mime: m[1], data: m[2] } : null; }
 
-    // API kalitni xavfsiz boshqarish (yozayotganda o'chib ketishining oldi olingan)
-    let isUserTyping = false;
-    const apiKeyInput = document.getElementById('adminApiKeyInput');
+/* ---------- AI yadro (Gemini) ----------
+   1) Avval /api/ai (Vercel serverless, kalit serverda) ni sinaydi
+   2) Bo'lmasa settings/gemini_api_key (bazadagi kalit) ga o'tadi          */
+const AI = { key: '', model: 'gemini-3.8-flash', proxy: null, fallback: ['gemini-3.5-flash-lite', 'gemini-2.5-flash'] };
+db.ref('settings/gemini_api_key').on('value', s => { AI.key = s.val() || ''; });
+db.ref('settings/gemini_model').on('value', s => { if (s.val()) AI.model = String(s.val()).trim(); });
 
-    apiKeyInput.addEventListener('focus', () => { isUserTyping = true; });
-    apiKeyInput.addEventListener('blur', () => { isUserTyping = false; });
-
-    db.ref("settings/gemini_api_key").on("value", snap => {
-      if(snap.val() && !isUserTyping) {
-        apiKeyInput.value = snap.val();
+async function aiRaw(model, payload) {
+  if (AI.proxy !== false) {
+    try {
+      const r = await fetch('/api/ai', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model, ...payload }) });
+      if ([404, 405, 501].includes(r.status)) AI.proxy = false;
+      else {
+        const d = await r.json().catch(() => ({}));
+        if (d?.error?.code === 'NO_SERVER_KEY') AI.proxy = false;
+        else { AI.proxy = true; return { status: r.status, data: d }; }
       }
-    });
+    } catch (e) { AI.proxy = false; }
+  }
+  if (!AI.key) return { status: 0, data: { error: { message: "AI kaliti kiritilmagan. Admin panelda Gemini API kalitini saqlang." } } };
+  const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': AI.key }, body: JSON.stringify(payload)
+  });
+  return { status: r.status, data: await r.json().catch(() => ({})) };
+}
+async function ai({ system, contents, prompt, json = false, temperature = 0.7 }) {
+  const payload = { contents: contents || [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { temperature } };
+  if (system) payload.systemInstruction = { parts: [{ text: system }] };
+  if (json) payload.generationConfig.responseMimeType = 'application/json';
+  const models = [AI.model, ...AI.fallback.filter(m => m !== AI.model)];
+  let lastErr = '';
+  for (const m of models) {
+    let out;
+    try { out = await aiRaw(m, payload); } catch (e) { throw new Error('Tarmoq xatosi. Internetni tekshiring.'); }
+    const { status, data } = out;
+    if (data.error) {
+      lastErr = data.error.message || ('Xato ' + status);
+      if (status === 404 || /not found|no longer available|not supported/i.test(lastErr)) continue; // keyingi model
+      if (status === 429) throw new Error("AI limiti (kvota) tugadi. Birozdan so'ng urinib ko'ring.");
+      if (status === 400 && /API key/i.test(lastErr)) throw new Error("AI kaliti noto'g'ri. Admin kalitni tekshirsin.");
+      throw new Error(lastErr);
+    }
+    const parts = data.candidates?.[0]?.content?.parts || [];
+    const text = parts.filter(p => p.text && !p.thought).map(p => p.text).join('');
+    if (!text) {
+      if (data.promptFeedback?.blockReason) throw new Error("So'rov xavfsizlik filtri tomonidan to'xtatildi.");
+      throw new Error("AI javob qaytarmadi. Qayta urinib ko'ring.");
+    }
+    return text;
+  }
+  throw new Error(lastErr || 'AI modeli topilmadi');
+}
+async function aiJSON(opts) {
+  const t = await ai({ ...opts, json: true });
+  try { return JSON.parse(t); } catch (e) {
+    const a = t.search(/[\[{]/), b = Math.max(t.lastIndexOf('}'), t.lastIndexOf(']'));
+    if (a >= 0 && b > a) { try { return JSON.parse(t.slice(a, b + 1)); } catch (e2) {} }
+    throw new Error("AI javobi tushunarsiz formatda keldi. Qayta urinib ko'ring.");
+  }
+}
+const SYS_BASE = "Sen EduProjects platformasining AI yordamchisisan (muallif: Fattoxov Abdulloh). Foydalanuvchi o'zbek tilida yozsa, o'zbek (lotin) tilida javob ber; boshqa tilda yozsa, o'sha tilda. Aniq, tuzilgan, xatosiz yoz. Bilmagan narsangni to'qima; manba, statistika yoki iqtibosni o'ylab topma.";
 
-    function saveApiKey(e) {
+
+    /* ======================= SOZLAMALAR ======================= */
+    let adminCards = [], allProjects = {}, purchases = {};
+    db.ref('settings/gemini_api_key').once('value', s => { if (s.val()) $('adminApiKeyInput').value = s.val(); });
+    db.ref('settings/gemini_model').once('value', s => { $('modelInput').value = s.val() || ''; });
+    db.ref('settings/free_limit').once('value', s => { $('freeLimitInput').value = s.val() ?? ''; });
+    db.ref('settings/ai_price').once('value', s => { if (s.val()) $('aiPriceInput').value = s.val(); });
+
+    async function saveSettings(e) {
       e.preventDefault();
-      const val = apiKeyInput.value.trim();
-      if (!val) return alert("Kalitni kiriting!");
-      
-      db.ref("settings/gemini_api_key").set(val).then(() => {
-        alert("Gemini AI kaliti muvaffaqiyatli saqlandi!");
-        isUserTyping = false;
-      }).catch(err => {
-        alert("Xatolik yuz berdi: " + err.message);
-      });
+      const up = {};
+      const key = $('adminApiKeyInput').value.trim(), model = $('modelInput').value.trim(), lim = $('freeLimitInput').value, price = $('aiPriceInput').value;
+      if (key) up['settings/gemini_api_key'] = key;
+      if (model) up['settings/gemini_model'] = model;
+      if (lim !== '') up['settings/free_limit'] = Math.max(0, Number(lim));
+      if (price) up['settings/ai_price'] = Number(price);
+      if (!Object.keys(up).length) return toast("Hech narsa kiritilmadi", 'warn');
+      try { await db.ref().update(up); toast('Sozlamalar saqlandi', 'ok'); } catch (err) { toast('Xato: ' + err.message, 'err'); }
+    }
+    async function testAI() {
+      const pill = $('aiPill'); pill.textContent = 'AI: sinalmoqda...';
+      try {
+        await new Promise(r => setTimeout(r, 400));          // kalit/model bazadan kelib ulgursin
+        const r = await ai({ prompt: 'Faqat "OK" so\'zini yoz.', temperature: 0 });
+        const via = AI.proxy ? 'server (Vercel, xavfsiz)' : 'bazadagi kalit';
+        pill.textContent = '✅ AI ishlayapti'; pill.className = 'text-[10px] px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-300';
+        toast(`AI ishlayapti · ${via} · model: ${AI.model}`, 'ok');
+      } catch (err) {
+        pill.textContent = '❌ AI xato'; pill.className = 'text-[10px] px-2 py-1 rounded-full bg-rose-500/20 text-rose-300';
+        toast(err.message, 'err');
+      }
     }
 
-    db.ref("settings/ai_price").on("value", snap => {
-      if(snap.val()) document.getElementById('aiPriceInput').value = snap.val();
-    });
-
-    function saveAiPrice(e) {
-      e.preventDefault();
-      const val = Number(document.getElementById('aiPriceInput').value);
-      db.ref("settings/ai_price").set(val).then(() => alert("AI Premium narxi saqlandi!"));
-    }
-
-    // FORUM CHATNI ADMIN NAZORATI
-    db.ref("forum_messages").on("value", snapshot => {
-      const list = document.getElementById('adminForumList');
-      list.innerHTML = '';
-      const data = snapshot.val();
-      if(data) {
-        Object.keys(data).forEach(k => {
-          const m = data[k];
-          list.innerHTML += `
-            <div class="bg-slate-900 p-2 rounded-xl flex justify-between items-center text-[11px]">
-              <div><b class="text-indigo-400">${m.author}:</b> ${m.text}</div>
-              <button onclick="db.ref('forum_messages/${k}').remove()" class="text-rose-400 px-2"><i class="fa-solid fa-trash"></i></button>
-            </div>
-          `;
-        });
-      }
-    });
-
+    /* ======================= KARTALAR ======================= */
     function saveCard(e) {
       e.preventDefault();
-      db.ref("settings/cards").push().set({
-        number: document.getElementById('cNumber').value,
-        holder: document.getElementById('cHolder').value,
-        bank: document.getElementById('cBank').value
-      }).then(() => { alert("Karta qo'shildi!"); e.target.reset(); });
+      db.ref('settings/cards').push().set({ number: $('cNumber').value.trim(), holder: $('cHolder').value.trim(), bank: $('cBank').value.trim() })
+        .then(() => { toast("Karta qo'shildi", 'ok'); e.target.reset(); });
+    }
+    db.ref('settings/cards').on('value', snap => {
+      const d = snap.val(); adminCards = d ? Object.keys(d).map(k => ({ id: k, ...d[k] })) : [];
+      $('adminCardsList').innerHTML = adminCards.map(c => `<div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center text-xs"><div><span class="font-bold">${esc(c.number)}</span> <span class="text-slate-400 text-[10px]">(${esc(c.holder)}, ${esc(c.bank || '')})</span></div><button onclick="db.ref('settings/cards/${c.id}').remove()" class="text-rose-400 px-2"><i class="fa-solid fa-trash"></i></button></div>`).join('');
+    });
+
+    /* ======================= LOYIHA QO'SHISH ======================= */
+    let pendingFile = null, fileMeta = { list: [], excerpt: '' };
+    const MAX_BYTES = 7 * 1024 * 1024;
+    const dz = $('dropZone');
+    ['dragenter', 'dragover'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('drop-zone--over'); }));
+    ['dragleave', 'drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('drop-zone--over'); }));
+    dz.addEventListener('drop', e => { if (e.dataTransfer.files[0]) handleFileSelect(e.dataTransfer.files[0]); });
+
+    const readDataUrl = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); });
+    async function officeText(zip) {            // docx / pptx ichidan matn ajratish (AI tavsifi uchun)
+      let t = '';
+      if (zip.file('word/document.xml')) {
+        const x = await zip.file('word/document.xml').async('string');
+        t = (x.match(/<w:t[^>]*>[^<]*<\/w:t>/g) || []).map(s => s.replace(/<[^>]+>/g, '')).join(' ');
+      } else {
+        const slides = Object.keys(zip.files).filter(n => /^ppt\/slides\/slide\d+\.xml$/.test(n)).sort((a, b) => parseInt(a.match(/\d+/)) - parseInt(b.match(/\d+/)));
+        for (const n of slides.slice(0, 12)) { const x = await zip.file(n).async('string'); t += ' ' + (x.match(/<a:t>[^<]*<\/a:t>/g) || []).map(s => s.replace(/<[^>]+>/g, '')).join(' '); }
+      }
+      return t.replace(/\s+/g, ' ').trim();
+    }
+    async function handleFileSelect(file) {
+      if (!file) return;
+      if (file.size > MAX_BYTES) { pendingFile = null; $('fileStatusText').textContent = '❌ Fayl 7 MB dan katta — havola (Drive) ishlating'; return toast("Fayl juda katta. Havola kiriting.", 'err'); }
+      $('fileStatusText').textContent = '⏳ O\'qilmoqda...';
+      try {
+        const dataUrl = await readDataUrl(file);
+        pendingFile = { name: file.name, size: file.size, dataUrl };
+        fileMeta = { list: [], excerpt: '' };
+        const ext = file.name.split('.').pop().toLowerCase();
+        let info = `✅ ${file.name} (${(file.size / 1048576).toFixed(2)} MB)`;
+        try {
+          if (ext === 'zip' && window.JSZip) {
+            const zip = await JSZip.loadAsync(file);
+            fileMeta.list = Object.keys(zip.files).filter(n => !zip.files[n].dir && !/(^|\/)(__MACOSX|\.DS_Store|node_modules)/.test(n));
+            info += ` · ZIP: ${fileMeta.list.length} ta fayl`;
+            const off = fileMeta.list.find(n => /\.(docx|pptx)$/i.test(n));
+            if (off) { const inner = await JSZip.loadAsync(await zip.file(off).async('uint8array')); fileMeta.excerpt = (await officeText(inner)).slice(0, 4000); }
+          } else if ((ext === 'docx' || ext === 'pptx') && window.JSZip) {
+            fileMeta.excerpt = (await officeText(await JSZip.loadAsync(file))).slice(0, 4000);
+            if (fileMeta.excerpt) info += ' · matn o\'qildi';
+          }
+        } catch (err) { /* ichki tahlil ixtiyoriy */ }
+        $('fileStatusText').textContent = info;
+        if (!$('pTitle').value.trim()) {
+          const base = (fileMeta.list.find(n => /\.(docx|pptx|pdf)$/i.test(n)) || file.name).split('/').pop().replace(/\.[^.]+$/, '').replace(/[_\-]+/g, ' ');
+          $('pTitle').value = base;
+        }
+      } catch (err) { pendingFile = null; $('fileStatusText').textContent = '❌ Faylni o\'qib bo\'lmadi'; }
+    }
+    async function aiDescribe() {
+      const title = $('pTitle').value.trim();
+      if (!title && !fileMeta.excerpt) return toast("Avval fayl tanlang yoki nom kiriting", 'warn');
+      const btn = $('aiDescBtn'); btn.disabled = true; const old = btn.innerHTML; btn.innerHTML = '<span class="dots"><span></span><span></span><span></span></span> AI yozmoqda';
+      try {
+        const prices = Object.values(allProjects).filter(p => p.price).map(p => ({ category: p.category, price: p.price })).slice(0, 40);
+        const r = await aiJSON({
+          system: SYS_BASE,
+          prompt: `Talabalarga ish sotadigan platforma uchun mahsulot kartasi yoz.\nHozirgi nom: "${title}"\nKategoriya: ${$('pCategory').value}\nFayllar: ${fileMeta.list.slice(0, 40).join(', ') || '-'}\nFayldan ko'chirma: ${fileMeta.excerpt || '-'}\nMavjud narxlar: ${JSON.stringify(prices)}\n\nJSON qaytar: {"title":"qisqa, aniq nom","description":"2-3 jumla: nima haqida, nimalarni o'z ichiga oladi (faqat fayldan ma'lum bo'lganini yoz, o'ylab topma)","category":"Mustaqil ish|Veb-sayt|Kurs ishi|Referat|Taqdimot","price_hint":raqam yoki null,"price_reason":"qisqa asos"}`,
+          temperature: 0.4
+        });
+        if (r.title) $('pTitle').value = r.title;
+        if (r.description) $('pDesc').value = r.description;
+        if (r.category && [...$('pCategory').options].some(o => o.value === r.category)) $('pCategory').value = r.category;
+        if (r.price_hint) {
+          const h = $('priceHint'); h.classList.remove('hidden'); h.textContent = `💡 AI narx tavsiyasi: ${fmt(r.price_hint)} UZS — ${r.price_reason || ''}`;
+          if (!$('pPrice').value) $('pPrice').value = Math.round(r.price_hint / 1000) * 1000;
+        }
+        toast('Tayyor — o\'qib chiqib tahrirlang', 'ok');
+      } catch (e) { toast(e.message, 'err'); }
+      btn.disabled = false; btn.innerHTML = old;
+    }
+    async function saveProject(e) {
+      e.preventDefault();
+      const url = $('pFileUrl').value.trim();
+      if (!pendingFile && !url) return toast('Fayl tanlang yoki havola kiriting', 'warn');
+      const title = $('pTitle').value.trim() || (pendingFile ? pendingFile.name.replace(/\.[^.]+$/, '') : '');
+      if (!title) return toast('Nom kiriting', 'warn');
+      const btn = $('projSubmitBtn'); btn.disabled = true; btn.textContent = 'Yuklanmoqda...';
+      try {
+        const ref = db.ref('projects').push();
+        if (pendingFile) await db.ref('project_files/' + ref.key).set({ data: pendingFile.dataUrl });
+        await ref.set({
+          title, category: $('pCategory').value, price: Number($('pPrice').value), description: $('pDesc').value.trim(),
+          fileName: pendingFile ? pendingFile.name : null, fileSize: pendingFile ? pendingFile.size : null, fileUrl: url || null,
+          hasFile: !!pendingFile, createdAt: Date.now()
+        });
+        toast("Loyiha e'lon qilindi", 'ok');
+        e.target.reset(); pendingFile = null; fileMeta = { list: [], excerpt: '' };
+        $('fileStatusText').textContent = 'Faylni bosib tanlang yoki shu yerga tashlang'; $('priceHint').classList.add('hidden');
+      } catch (err) { toast('Xato: ' + err.message, 'err'); }
+      btn.disabled = false; btn.textContent = "Barchaga e'lon qilish";
+    }
+    db.ref('projects').on('value', snap => {
+      allProjects = snap.val() || {};
+      const ids = Object.keys(allProjects).sort((a, b) => (allProjects[b].createdAt || 0) - (allProjects[a].createdAt || 0));
+      $('projectsAdminList').innerHTML = ids.length ? ids.map(id => { const p = allProjects[id]; return `<div class="bg-slate-900 border border-slate-800 p-2.5 rounded-xl flex justify-between items-center gap-2"><div class="min-w-0"><div class="font-bold truncate">${esc(p.title)}</div><div class="text-[10px] text-slate-400">${esc(p.category || '')} · ${fmt(p.price)} UZS</div></div><div class="flex gap-1 shrink-0"><button class="tbtn" onclick="editPrice('${id}')">Narx</button><button class="tbtn" style="color:#fda4af" onclick="delProject('${id}')"><i class="fa-solid fa-trash"></i></button></div></div>`; }).join('') : '<div class="text-slate-500">Hali loyiha yo\'q</div>';
+      renderPurchases();
+    });
+    function editPrice(id) { const v = prompt('Yangi narx (UZS):', allProjects[id].price); if (v && !isNaN(v)) db.ref('projects/' + id + '/price').set(Number(v)); }
+    function delProject(id) {
+      if (!confirm(`"${allProjects[id].title}" o'chirilsinmi? (Fayl ham o'chadi)`)) return;
+      db.ref('projects/' + id).remove(); db.ref('project_files/' + id).remove();
     }
 
-    db.ref("settings/cards").on("value", snapshot => {
-      const container = document.getElementById('adminCardsList');
-      container.innerHTML = '';
-      const data = snapshot.val();
-      if(data) {
-        Object.keys(data).forEach(k => {
-          const c = data[k];
-          container.innerHTML += `
-            <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
-              <div><span class="font-bold text-white">${c.number}</span> <span class="text-slate-400 text-[10px]">(${c.holder})</span></div>
-              <button onclick="db.ref('settings/cards/${k}').remove()" class="text-rose-400 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
-            </div>
-          `;
-        });
-      }
-    });
+    /* ======================= TO'LOVLAR ======================= */
+    db.ref('purchases').on('value', snap => { purchases = snap.val() || {}; renderPurchases(); renderStats(); });
+    const dateStr = t => new Date(t).toLocaleString('uz-UZ', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    function expectedPrice(r) { return r.isAiPremium ? Number(AI_PRICE) : Number((allProjects[r.projectId] || {}).price || 0); }
+    let AI_PRICE = 25000; db.ref('settings/ai_price').on('value', s => { if (s.val()) AI_PRICE = Number(s.val()); });
 
-    db.ref("purchases").on("value", snapshot => {
-      const list = document.getElementById('requestsList');
-      list.innerHTML = '';
-      const data = snapshot.val();
-      let pendingCount = 0, totalRevenue = 0;
-      if (data) {
-        Object.keys(data).forEach(key => {
-          const req = { id: key, ...data[key] };
-          if (req.status === 'pending') pendingCount++;
-          if (req.status === 'approved') totalRevenue += Number(req.paidAmount || 0);
-          let statusBadge = req.status === 'pending' ? '<span class="text-amber-400 font-bold">KUTILMOQDA</span>' : (req.status === 'approved' ? '<span class="text-emerald-400 font-bold">TASDIQLANGAN</span>' : '<span class="text-rose-400 font-bold">RAD ETILGAN</span>');
-          const receiptImgTag = req.receiptImage ? `<a href="${req.receiptImage}" target="_blank" class="block mt-2"><img src="${req.receiptImage}" class="w-full h-24 object-cover rounded-xl border border-slate-700/80"></a>` : '';
-          
-          list.innerHTML += `
-            <div class="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 text-xs space-y-2">
-              <div class="flex justify-between items-start">
-                <div>
-                  <div class="font-bold text-white text-sm">${req.studentName}</div>
-                  <div class="text-slate-400 text-[11px]">${req.studentContact}</div>
-                  <div class="text-slate-300 text-[10px] mt-0.5">Summa: <b class="text-emerald-400">${Number(req.paidAmount || 0).toLocaleString()} UZS</b></div>
-                </div>
-                <div>${statusBadge}</div>
-              </div>
-              ${receiptImgTag}
-              <div class="flex gap-2 pt-2">
-                ${req.status === 'pending' ? `
-                  <button onclick="db.ref('purchases/${req.id}').update({status: 'approved'})" class="flex-1 bg-emerald-600 hover:bg-emerald-500 py-2 rounded-xl text-white font-bold text-[11px]">Ruxsat berish</button>
-                  <button onclick="db.ref('purchases/${req.id}').update({status: 'revoked'})" class="bg-rose-600 px-3 py-2 rounded-xl text-white font-bold text-[11px]">Rad etish</button>
-                ` : ``}
-              </div>
-            </div>
-          `;
-        });
+    function renderPurchases() {
+      const list = $('requestsList'), f = $('payFilter').value;
+      const arr = Object.keys(purchases).map(k => ({ id: k, ...purchases[k] })).sort((a, b) => b.createdAt - a.createdAt).filter(r => f === 'all' || r.status === f);
+      if (!arr.length) { list.innerHTML = '<div class="text-center text-slate-500 text-xs py-4">Bu bo\'limda to\'lov yo\'q</div>'; return; }
+      const badge = { pending: '<span class="text-amber-400 font-bold">KUTILMOQDA</span>', approved: '<span class="text-emerald-400 font-bold">TASDIQLANGAN</span>', revoked: '<span class="text-rose-400 font-bold">RAD ETILGAN</span>' };
+      list.innerHTML = arr.map(r => {
+        const dup = r.receiptHash && Object.keys(purchases).some(k => k !== r.id && purchases[k].receiptHash === r.receiptHash);
+        const exp = expectedPrice(r), wrongAmt = exp && Number(r.paidAmount) !== exp;
+        const target = r.isAiPremium ? '👑 AI PRO (1 oy)' : esc((allProjects[r.projectId] || {}).title || 'Loyiha (o\'chirilgan?)');
+        const c = r.aiCheck;
+        const ai = c ? `<div class="p-2 rounded-xl text-[10px] ${c.ok ? 'bg-emerald-950/40 border border-emerald-500/30 text-emerald-300' : 'bg-amber-950/40 border border-amber-500/30 text-amber-300'}">🤖 ${c.ok ? 'AI: mos ko\'rinadi' : 'AI: e\'tibor bering'}<br>${esc(c.summary || '')}</div>` : '';
+        return `<div class="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 text-xs space-y-2">
+          <div class="flex justify-between items-start gap-2"><div>
+            <div class="font-bold text-white text-sm">${esc(r.studentName)}</div><div class="text-slate-400 text-[11px]">${esc(r.studentContact)} · ${dateStr(r.createdAt)}</div>
+            <div class="text-slate-300 text-[11px] mt-0.5">${target}</div>
+            <div class="text-slate-300 text-[10px] mt-0.5">Summa: <b class="text-emerald-400">${fmt(r.paidAmount)} UZS</b>${wrongAmt ? ` <span class="text-amber-400">(kutilgan: ${fmt(exp)})</span>` : ''}</div></div><div class="text-[10px] text-right">${badge[r.status] || ''}</div></div>
+          ${dup ? '<div class="text-[10px] text-rose-300 bg-rose-950/40 border border-rose-500/30 rounded-lg p-1.5">⚠️ Shu chek rasmi boshqa so\'rovda ham ishlatilgan!</div>' : ''}
+          <div id="rc_${r.id}">${r.receiptImage ? `<img src="${r.receiptImage}" class="w-full h-28 object-cover rounded-xl border border-slate-700/80">` : (r.hasReceipt ? `<button class="tbtn" onclick="showReceipt('${r.id}')"><i class="fa-regular fa-image"></i> Chekni ko'rish</button>` : '')}</div>
+          ${ai}
+          <div class="flex gap-2 pt-1 flex-wrap">
+            ${r.status !== 'approved' ? `<button onclick="approve('${r.id}')" class="flex-1 bg-emerald-600 hover:bg-emerald-500 py-2 rounded-xl text-white font-bold text-[11px]">Ruxsat berish</button>` : `<button onclick="setStatus('${r.id}','revoked')" class="flex-1 bg-slate-800 text-rose-300 py-2 rounded-xl font-bold text-[11px]">Ruxsatni bekor qilish</button>`}
+            ${r.status === 'pending' ? `<button onclick="setStatus('${r.id}','revoked')" class="bg-rose-600 px-3 py-2 rounded-xl text-white font-bold text-[11px]">Rad</button>` : ''}
+            ${(r.receiptImage || r.hasReceipt) && !r.aiCheck ? `<button onclick="aiCheckReceipt('${r.id}',this)" class="tbtn"><i class="fa-solid fa-robot"></i> AI chek tekshiruvi</button>` : ''}
+          </div></div>`;
+      }).join('');
+    }
+    async function showReceipt(id) {
+      const s = await db.ref('receipts/' + id).once('value'), d = s.val()?.data;
+      $('rc_' + id).innerHTML = d ? `<a href="${d}" target="_blank"><img src="${d}" class="w-full max-h-72 object-contain rounded-xl border border-slate-700/80"></a>` : '<span class="text-slate-500">Chek topilmadi</span>';
+    }
+    function setStatus(id, status) { db.ref('purchases/' + id).update({ status }); }
+    function approve(id) {
+      const r = purchases[id], up = { status: 'approved', approvedAt: Date.now() };
+      if (r.isAiPremium) {                                       // obuna 30 kunga; faol obunaga qo'shib boradi
+        const base = Math.max(Date.now(), ...Object.values(purchases).filter(o => o.deviceId === r.deviceId && o.isAiPremium && o.status === 'approved' && o.expiresAt).map(o => o.expiresAt));
+        up.expiresAt = base + 30 * 864e5;
       }
-      document.getElementById('statPending').innerText = pendingCount;
-      document.getElementById('statRevenue').innerText = totalRevenue.toLocaleString() + " UZS";
-    });
+      db.ref('purchases/' + id).update(up);
+    }
+    async function aiCheckReceipt(id, btn) {
+      const r = purchases[id]; btn.disabled = true; const old = btn.innerHTML; btn.innerHTML = '<span class="dots"><span></span><span></span><span></span></span>';
+      try {
+        let img = r.receiptImage;
+        if (!img) img = (await db.ref('receipts/' + id).once('value')).val()?.data;
+        const p = dataUrlParts(img); if (!p) throw new Error('Chek rasmi topilmadi');
+        const res = await aiJSON({
+          system: "Sen to'lov cheklarini o'qiydigan yordamchisan (Uzcard/Humo/Click/Payme ilovalari skrinshotlari). Faqat rasmda ko'ringanini yoz, taxmin qilma — ko'rinmasa null.",
+          contents: [{ role: 'user', parts: [{ text: 'Bu rasmni tahlil qil. JSON: {"is_receipt":true/false,"amount":raqam (so\'mda, faqat raqam) yoki null,"date":"ko\'ringan sana/vaqt yoki null","recipient_card_last4":"oxirgi 4 raqam yoki null","recipient_name":"yoki null","success":true/false/null (o\'tkazma muvaffaqiyatli deb ko\'rinadimi),"looks_edited":true/false (matn/shrift/tekislikda tahrir izlari bormi),"notes":"qisqa izoh"}' }, { inlineData: { mimeType: p.mime, data: p.data } }] }],
+          temperature: 0.1
+        });
+        const exp = expectedPrice(r);
+        const amtOk = res.amount != null && Math.abs(Number(res.amount) - Number(r.paidAmount)) < 1;
+        const needOk = !exp || Number(res.amount) >= exp;
+        const l4 = String(res.recipient_card_last4 || '').replace(/\D/g, '');
+        const cardOk = !l4 || adminCards.some(c => String(c.number).replace(/\D/g, '').endsWith(l4));
+        const problems = [];
+        if (!res.is_receipt) problems.push("rasm chekka o'xshamaydi");
+        if (res.amount == null) problems.push("summa o'qilmadi"); else if (!amtOk) problems.push(`chekdagi summa (${fmt(res.amount)}) kiritilgan summadan (${fmt(r.paidAmount)}) farq qiladi`); else if (!needOk) problems.push(`summa yetarli emas (kerak: ${fmt(exp)})`);
+        if (!cardOk) problems.push(`qabul qiluvchi karta (…${l4}) sizning kartalaringizga mos emas`);
+        if (res.success === false) problems.push("o'tkazma muvaffaqiyatsiz ko'rinadi");
+        if (res.looks_edited) problems.push('tahrir izlari bor');
+        const ok = !problems.length;
+        const summary = (ok ? `Summa ${fmt(res.amount)} UZS mos${l4 ? `, karta …${l4}` : ''}${res.date ? ', ' + res.date : ''}.` : problems.join('; ') + '.') + (res.notes ? ' ' + res.notes : '');
+        await db.ref('purchases/' + id + '/aiCheck').set({ ok, summary, checkedAt: Date.now() });
+      } catch (e) { toast(e.message, 'err'); btn.disabled = false; btn.innerHTML = old; }
+    }
+
+    /* ======================= STATISTIKA ======================= */
+    let aiToday = {};
+    db.ref('ai_stats/' + todayKey()).on('value', s => { aiToday = s.val() || {}; renderStats(); });
+    function renderStats() {
+      const arr = Object.values(purchases), now = Date.now();
+      $('statPending').textContent = arr.filter(r => r.status === 'pending').length;
+      $('statRevenue').textContent = fmt(arr.filter(r => r.status === 'approved').reduce((s, r) => s + Number(r.paidAmount || 0), 0)) + ' UZS';
+      const proDevices = new Set(arr.filter(r => r.isAiPremium && r.status === 'approved' && (!r.expiresAt || r.expiresAt > now)).map(r => r.deviceId));
+      $('statPro').textContent = proDevices.size;
+      const total = Object.values(aiToday).reduce((a, b) => a + Number(b), 0);
+      $('statAi').textContent = total;
+      $('aiToolStats').innerHTML = total ? 'Bugun: ' + Object.entries(aiToday).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${esc(k)} <b>${v}</b>`).join(' · ') : '';
+      // 7 kunlik daromad
+      const days = [...Array(7)].map((_, i) => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - (6 - i)); return d; });
+      const sums = days.map(d => arr.filter(r => r.status === 'approved' && (r.approvedAt || r.createdAt) >= d.getTime() && (r.approvedAt || r.createdAt) < d.getTime() + 864e5).reduce((s, r) => s + Number(r.paidAmount || 0), 0));
+      const mx = Math.max(1, ...sums);
+      $('revChart').innerHTML = sums.map((v, i) => `<div title="${fmt(v)} UZS"><span>${v ? Math.round(v / 1000) + 'k' : ''}</span><i style="height:${Math.max(2, 70 * v / mx)}px"></i><span>${days[i].getDate()}.${String(days[i].getMonth() + 1).padStart(2, '0')}</span></div>`).join('');
+    }
+    async function aiInsights() {
+      const out = $('insightsOut'); out.innerHTML = '<div class="panel"><span class="dots"><span></span><span></span><span></span></span> Tahlil qilinmoqda...</div>';
+      try {
+        const arr = Object.values(purchases), approved = arr.filter(r => r.status === 'approved');
+        const byCat = {}, byProj = {};
+        approved.forEach(r => { if (r.isAiPremium) { byCat['AI PRO'] = (byCat['AI PRO'] || 0) + 1; return; } const p = allProjects[r.projectId]; if (!p) return; byCat[p.category || '?'] = (byCat[p.category || '?'] || 0) + 1; byProj[p.title] = (byProj[p.title] || 0) + 1; });
+        const data = {
+          jami_sorov: arr.length, tasdiqlangan: approved.length, kutilayotgan: arr.filter(r => r.status === 'pending').length, rad_etilgan: arr.filter(r => r.status === 'revoked').length,
+          daromad_uzs: approved.reduce((s, r) => s + Number(r.paidAmount || 0), 0), kategoriya_boyicha_sotuv: byCat,
+          eng_kop_sotilgan: Object.entries(byProj).sort((a, b) => b[1] - a[1]).slice(0, 5), hali_sotilmagan_loyihalar: Object.values(allProjects).map(p => p.title).filter(t => !byProj[t]).slice(0, 10),
+          loyihalar_soni: Object.keys(allProjects).length, ai_pro_narx: AI_PRICE, bugungi_ai_sorov: aiToday
+        };
+        const r = await ai({ system: SYS_BASE, prompt: `Sen talabalar uchun referat/mustaqil ish sotadigan kichik biznesning maslahatchisisan. Quyidagi haqiqiy ma'lumotlarni tahlil qil va o'zbek tilida: 1) 3 qatorli xulosa, 2) 5 ta aniq, bajarsa bo'ladigan tavsiya (narx, assortiment, AI PRO sotuvi, tasdiqlash tezligi). Ma'lumot kam bo'lsa, buni ochiq ayt va o'ylab topma.\n\n${JSON.stringify(data)}`, temperature: 0.5 });
+        out.innerHTML = `<div class="panel">${md(r)}</div>`;
+      } catch (e) { out.innerHTML = `<div class="panel" style="color:#fca5a5">⚠️ ${esc(e.message)}</div>`; }
+    }
+
+    /* ======================= FORUM + AI MODERATSIYA ======================= */
+    let forumData = {}, flagged = {};
+    db.ref('forum_messages').limitToLast(100).on('value', snap => { forumData = snap.val() || {}; renderForum(); });
+    function renderForum() {
+      const keys = Object.keys(forumData).reverse();
+      $('adminForumList').innerHTML = keys.length ? keys.map(k => { const m = forumData[k], f = flagged[k]; return `<div class="p-2 rounded-xl flex justify-between items-start gap-2 text-[11px] ${f ? 'bg-rose-950/50 border border-rose-500/40' : 'bg-slate-900'}"><div class="min-w-0"><b class="${m.isAi ? 'text-violet-300' : 'text-indigo-400'}">${esc(m.author)}:</b> ${esc(m.text)}${f ? `<div class="text-rose-300 mt-0.5">⚠️ ${esc(f)}</div>` : ''}</div><button onclick="db.ref('forum_messages/${k}').remove()" class="text-rose-400 px-2"><i class="fa-solid fa-trash"></i></button></div>`; }).join('') : '<div class="text-slate-500">Xabarlar yo\'q</div>';
+    }
+    async function aiModerate() {
+      const msgs = Object.keys(forumData).filter(k => !forumData[k].isAi).slice(-50).map(k => ({ id: k, a: forumData[k].author, t: forumData[k].text }));
+      if (!msgs.length) return toast('Tekshiradigan xabar yo\'q', 'warn');
+      const b = $('modBtn'); b.disabled = true; b.textContent = 'Tekshirilmoqda...';
+      try {
+        const r = await aiJSON({ system: SYS_BASE, prompt: `Talabalar forumi xabarlarini moderatsiya qil. Haqorat, so'kish, spam/reklama, shubhali havola yoki firibgarlik (karta so'rash), shaxsiy ma'lumot e'lon qilish, nomaqbul kontentni top. JSON: {"flagged":[{"id":"...","reason":"qisqa sabab"}]}. Oddiy savol-javoblarni belgilama.\n\n${JSON.stringify(msgs)}`, temperature: 0.1 });
+        flagged = {}; (r.flagged || []).forEach(f => { if (forumData[f.id]) flagged[f.id] = f.reason; });
+        renderForum(); toast(Object.keys(flagged).length ? `${Object.keys(flagged).length} ta shubhali xabar belgilandi` : 'Muammo topilmadi ✅', Object.keys(flagged).length ? 'warn' : 'ok');
+      } catch (e) { toast(e.message, 'err'); }
+      b.disabled = false; b.innerHTML = '<i class="fa-solid fa-shield-halved"></i> AI moderatsiya';
+    }
+    renderStats();
   </script>
 </body>
 </html>
