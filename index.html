@@ -3,81 +3,60 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EduProjects PRO - Admin Boshqaruv Paneli</title>
+  <title>EduProjects - Admin Panel</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>tailwind.config = { darkMode: 'class' }</script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
   <style>
-    body { font-family: system-ui, -apple-system, sans-serif; background: #070a13; color: #f8fafc; }
+    body { font-family: system-ui, -apple-system, sans-serif; }
+    .dark body { background: #070a13; color: #f8fafc; }
     .glass-card { background: rgba(15,23,42,.85); border: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(16px); }
-    .inp { width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: .75rem; padding: .6rem .75rem; font-size: .8rem; color: #fff; outline: none; }
+    .inp { width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: .75rem; padding: .6rem .75rem; font-size: .75rem; color: #fff; outline: none; }
     .inp:focus { border-color: #6366f1; }
-    .tbtn { background: rgba(99,102,241,.2); color: #a5b4fc; border-radius: .5rem; padding: .3rem .7rem; font-size: .75rem; }
-    .tbtn:hover { background: #4f46e5; color: #fff; }
-    #toasts { position: fixed; z-index: 100; left: 50%; transform: translateX(-50%); bottom: 1.2rem; display: flex; flex-direction: column; gap: .4rem; width: min(92vw, 380px); }
-    .toast { background: #1e293b; color: #fff; padding: .6rem .9rem; border-radius: .8rem; font-size: .75rem; box-shadow: 0 8px 24px rgba(0,0,0,.4); border-left: 4px solid #6366f1; }
-    .toast-ok { border-color: #10b981; } .toast-warn { border-color: #f59e0b; } .toast-err { border-color: #ef4444; }
   </style>
 </head>
-<body class="p-4 md:p-8 max-w-5xl mx-auto space-y-6">
-
-  <!-- HEADER -->
+<body class="p-4 max-w-4xl mx-auto space-y-6">
   <header class="glass-card p-4 rounded-2xl flex justify-between items-center">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white text-xl"><i class="fa-solid fa-user-shield"></i></div>
-      <div>
-        <h1 class="text-base font-bold">EduProjects PRO — Admin Panel</h1>
-        <p class="text-xs text-indigo-400">Muallif: Fattoxov Abdulloh</p>
-      </div>
-    </div>
+    <h1 class="text-base font-bold text-indigo-400"><i class="fa-solid fa-shield-halved"></i> EduProjects Admin Panel</h1>
+    <div class="text-xs text-slate-400" id="adminStats">Yuklanmoqda...</div>
   </header>
 
-  <!-- YANGI LOYIHA YUKLASH (ZIP HAJMI CHEKLAMASIZ) -->
+  <!-- LLOYIHA YOKI SILKA QO'SHISH -->
   <section class="glass-card p-5 rounded-2xl space-y-4">
-    <h2 class="text-sm font-bold text-indigo-300 uppercase tracking-wider flex items-center gap-2">
-      <i class="fa-solid fa-cloud-arrow-up"></i> Yangi Loyiha Yuklash (ZIP va boshqa fayllar)
-    </h2>
-    <form onsubmit="addProject(event)" class="space-y-3">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <input type="text" id="pTitle" placeholder="Loyiha nomi" required class="inp">
-        <input type="text" id="pCategory" placeholder="Kategoriya (masalan: Dasturlash, Grafik...)" required class="inp">
+    <h2 class="text-sm font-bold text-indigo-300"><i class="fa-solid fa-plus-circle"></i> Yangi Loyiha yoki Veb-sayt Silkasini Qo'shish</h2>
+    <form onsubmit="addNewProject(event)" class="space-y-3">
+      <div class="grid grid-cols-2 gap-3">
+        <input type="text" id="pTitle" required placeholder="Loyiha nomi" class="inp">
+        <input type="text" id="pCategory" required placeholder="Kategoriya (masalan: Dasturlash)" class="inp">
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <input type="number" id="pPrice" placeholder="Narxi (UZS)" required class="inp">
-        <div>
-          <label class="block text-[10px] text-slate-400 mb-1">Fayl tanlang (ZIP, RAR, PDF, DOCX... hajmi cheklanmagan):</label>
-          <input type="file" id="pFile" required class="inp file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:bg-indigo-600 file:text-white text-xs">
-        </div>
+      <div class="grid grid-cols-2 gap-3">
+        <input type="number" id="pPrice" required placeholder="Narxi (UZS)" class="inp">
+        <input type="text" id="pUrl" placeholder="Veb-sayt silkasi (https://...) — ixtiyoriy" class="inp">
       </div>
-      <textarea id="pDesc" rows="2" placeholder="Loyiha haqida batafsil ma'lumot..." class="inp"></textarea>
-      <button type="submit" id="uploadBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 py-2.5 rounded-xl text-xs font-bold text-white transition-all">
-        <i class="fa-solid fa-plus mr-1"></i> Loyihani Bazaga Saqlash
-      </button>
+      <textarea id="pDesc" rows="2" placeholder="Qisqacha tavsif" class="inp"></textarea>
+      <div class="flex items-center gap-2">
+        <label class="text-xs text-slate-400">Fayl biriktirish (agar silka bo'lmasa):</label>
+        <input type="file" id="pFile" class="text-xs text-slate-400">
+      </div>
+      <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 py-2.5 rounded-xl text-xs font-bold text-white">Loyihani Qo'shish</button>
     </form>
   </section>
 
-  <!-- ESKI VA BARCHA YUKLANGAN LOYIHALAR RO'YXATI -->
+  <!-- KUTILAYOTGAN TO'LOVLAR -->
   <section class="glass-card p-5 rounded-2xl space-y-4">
-    <div class="flex justify-between items-center">
-      <h2 class="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
-        <i class="fa-solid fa-box-archive"></i> Barcha Yuklangan Loyihalar va Fayllar
-      </h2>
-      <span id="projCount" class="text-xs text-slate-400 font-mono">0 ta loyiha</span>
-    </div>
-    <div id="adminProjectsList" class="space-y-3">
-      <div class="text-center py-6 text-slate-500 text-xs">Yuklanmoqda...</div>
+    <h2 class="text-sm font-bold text-amber-400"><i class="fa-solid fa-receipt"></i> To'lov Cheklari (Tasdiqlash Kutilmoqda)</h2>
+    <div id="pendingPurchases" class="space-y-3">
+      <div class="text-xs text-slate-500">Kutilayotgan to'lovlar yo'q.</div>
     </div>
   </section>
 
-  <!-- KUTILAYOTGAN TO'LOVLAR (CHEKLAR) -->
+  <!-- BARCHA YUKLANGAN LOYIHALAR VA FAYLLAR -->
   <section class="glass-card p-5 rounded-2xl space-y-4">
-    <h2 class="text-sm font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
-      <i class="fa-solid fa-receipt"></i> Kutilayotgan To'lov Cheklari
-    </h2>
-    <div id="purchasesList" class="space-y-3">
-      <div class="text-center py-6 text-slate-500 text-xs">Cheklar yuklanmoqda...</div>
+    <h2 class="text-sm font-bold text-emerald-400"><i class="fa-solid fa-folder-tree"></i> Barcha Yuklangan Loyihalar (Eski va Yangi fayllar)</h2>
+    <div id="adminProjectsList" class="space-y-2">
+      <div class="text-xs text-slate-500">Loyihalar yuklanmoqda...</div>
     </div>
   </section>
 
@@ -93,142 +72,99 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    const $ = id => document.getElementById(id);
 
-    function toast(msg, type = 'info') {
-      let box = document.getElementById('toasts') || document.createElement('div');
-      box.id = 'toasts'; document.body.appendChild(box);
-      const el = document.createElement('div');
-      el.className = 'toast toast-' + type; el.textContent = msg;
-      box.appendChild(el);
-      setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3500);
-    }
-
-    // 1. ESKI VA YANGI BARCHA LOYIHALARNI CHIQARISH
-    let allProjects = [];
+    // Loyihalar va cheklarni yuklash
     db.ref('projects').on('value', snap => {
-      const d = snap.val();
-      allProjects = d ? Object.keys(d).map(k => ({ id: k, ...d[k] })).sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0)) : [];
-      document.getElementById('projCount').textContent = allProjects.length + " ta loyiha";
-      renderAdminProjects();
-    });
-
-    function renderAdminProjects() {
-      const box = document.getElementById('adminProjectsList');
-      if (!allProjects.length) {
-        box.innerHTML = '<div class="text-center py-6 text-slate-500 text-xs">Hali hech qanday loyiha yuklanmagan.</div>';
+      const data = snap.val();
+      const projects = data ? Object.keys(data).map(k => ({ id: k, ...data[k] })) : [];
+      
+      $('adminStats').textContent = `Jami loyihalar: ${projects.length} ta`;
+      
+      if (!projects.length) {
+        $('adminProjectsList').innerHTML = '<div class="text-xs text-slate-500">Hali loyihalar qo\'shilmagan.</div>';
         return;
       }
-      box.innerHTML = allProjects.map(p => `
-        <div class="glass-card p-3 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-          <div class="space-y-1">
-            <div class="flex items-center gap-2">
-              <span class="bg-indigo-500/20 text-indigo-300 text-[10px] px-2 py-0.5 rounded font-semibold">${p.category || 'Loyiha'}</span>
-              <h3 class="text-xs font-bold text-white">${p.title}</h3>
-            </div>
-            <p class="text-[11px] text-slate-400">${p.description || ''}</p>
-            <div class="text-[10px] text-slate-500 font-mono">Fayl: ${p.fileName || 'Noma\'lum'} | Narxi: ${Number(p.price || 0).toLocaleString('ru-RU')} UZS</div>
+
+      $('adminProjectsList').innerHTML = projects.reverse().map(p => `
+        <div class="bg-slate-900/60 border border-slate-800 p-3 rounded-xl flex justify-between items-center text-xs">
+          <div>
+            <div class="font-bold text-white">${esc(p.title)} <span class="text-[10px] text-indigo-400">(${esc(p.category)})</span></div>
+            <div class="text-[10px] text-slate-400">Narxi: ${Number(p.price).toLocaleString()} UZS · ${p.fileUrl ? '🌐 Silka mavjud' : '📁 Fayl mavjud'}</div>
           </div>
-          <div class="flex gap-2">
-            <button onclick="downloadProject('${p.id}')" class="tbtn"><i class="fa-solid fa-download"></i> Yuklash</button>
-            <button onclick="deleteProject('${p.id}')" class="tbtn text-rose-400 hover:bg-rose-600/30"><i class="fa-solid fa-trash"></i></button>
-          </div>
+          <button onclick="deleteProject('${p.id}')" class="bg-rose-600/20 text-rose-400 px-3 py-1 rounded-lg text-xs hover:bg-rose-600 hover:text-white">O'chirish</button>
         </div>
       `).join('');
-    }
+    });
 
-    // ZIP FAYL HAJMI CHEKLAMASIZ YUKLASH
-    async function addProject(e) {
-      e.preventDefault();
-      const fileInp = document.getElementById('pFile');
-      const file = fileInp.files[0];
-      if (!file) return toast("Fayl tanlang", "warn");
-
-      const btn = document.getElementById('uploadBtn');
-      btn.disabled = true; btn.textContent = "Yuklanmoqda (kutib turing)...";
-
-      try {
-        const reader = new FileReader();
-        reader.onload = async function(evt) {
-          const base64Data = evt.target.result;
-          const ref = db.ref('projects').push();
-          const pId = ref.key;
-
-          // Asosiy ma'lumotlar
-          await ref.set({
-            title: document.getElementById('pTitle').value.trim(),
-            category: document.getElementById('pCategory').value.trim(),
-            price: Number(document.getElementById('pPrice').value),
-            description: document.getElementById('pDesc').value.trim(),
-            fileName: file.name,
-            createdAt: Date.now()
-          });
-
-          // Faylni alohida tugunga saqlash (Katta hajmlar uchun)
-          await db.ref('project_files/' + pId).set({ data: base64Data });
-
-          toast("Loyiha muvaffaqiyatli saqlandi!", "ok");
-          e.target.reset();
-          btn.disabled = false; btn.textContent = "+ Loyihani Bazaga Saqlash";
-        };
-        reader.readAsDataURL(file);
-      } catch (err) {
-        toast("Xatolik: " + err.message, "err");
-        btn.disabled = false; btn.textContent = "+ Loyihani Bazaga Saqlash";
-      }
-    }
-
-    // LOYIHANI O'CHIRISH
-    async function deleteProject(id) {
-      if (confirm("Ushbu loyihani o'chirmoqchimisiz?")) {
-        await db.ref('projects/' + id).remove();
-        await db.ref('project_files/' + id).remove();
-        toast("Loyiha o'chirildi", "ok");
-      }
-    }
-
-    // LOYIHA FAYLINI YUKLAB OLISH
-    async function downloadProject(id) {
-      try {
-        const p = allProjects.find(x => x.id === id);
-        const s = await db.ref('project_files/' + id).once('value');
-        const data = s.val()?.data;
-        if (!data) return toast("Fayl topilmadi", "err");
-        const blob = await (await fetch(data)).blob();
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-        a.download = p?.fileName || 'loyiha.zip';
-        document.body.appendChild(a); a.click(); a.remove();
-      } catch(e) { toast("Yuklashda xato: " + e.message, "err"); }
-    }
-
-    // TO'LOV CHEKLARINI BOSHQARISH
+    // To'lovlarni kuzatish
     db.ref('purchases').on('value', snap => {
-      const d = snap.val();
-      const list = d ? Object.keys(d).map(k => ({ id: k, ...d[k] })).sort((a,b) => b.createdAt - a.createdAt) : [];
-      const box = document.getElementById('purchasesList');
-      if (!list.length) { box.innerHTML = '<div class="text-center py-4 text-slate-500 text-xs">Kutilayotgan to\'lovlar yo\'q.</div>'; return; }
+      const data = snap.val();
+      const purchases = data ? Object.keys(data).map(k => ({ id: k, ...data[k] })) : [];
+      const pending = purchases.filter(p => p.status === 'pending');
 
-      box.innerHTML = list.map(r => `
-        <div class="glass-card p-3 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-          <div class="text-xs space-y-1">
-            <div class="font-bold text-white">${r.studentName || 'Talaba'} (${r.studentContact || 'Bog\'lanish yo\'q'})</div>
-            <div class="text-slate-400">Summa: <b class="text-emerald-400">${r.paidAmount} UZS</b> | Status: <b>${r.status}</b></div>
+      if (!pending.length) {
+        $('pendingPurchases').innerHTML = '<div class="text-xs text-slate-500">Yangi to\'lov cheklari yo\'q.</div>';
+        return;
+      }
+
+      $('pendingPurchases').innerHTML = pending.map(r => `
+        <div class="bg-slate-900 border border-amber-500/30 p-3 rounded-xl flex flex-col gap-2 text-xs">
+          <div class="flex justify-between">
+            <span><b>${esc(r.studentName)}</b> (${esc(r.studentContact)})</span>
+            <span class="text-amber-400 font-bold">${Number(r.paidAmount).toLocaleString()} UZS</span>
           </div>
-          <div class="flex gap-2">
-            <button onclick="approvePay('${r.id}')" class="tbtn bg-emerald-600/20 text-emerald-400">Tasdiqlash</button>
-            <button onclick="rejectPay('${r.id}')" class="tbtn bg-rose-600/20 text-rose-400">Rad etish</button>
+          ${r.receiptData ? `<a href="${r.receiptData}" target="_blank" class="text-indigo-400 underline">Chek rasmini ko'rish</a>` : ''}
+          <div class="flex gap-2 mt-1">
+            <button onclick="updatePurchase('${r.id}', 'approved')" class="bg-emerald-600 text-white px-3 py-1 rounded-lg font-bold">Tasdiqlash</button>
+            <button onclick="updatePurchase('${r.id}', 'revoked')" class="bg-rose-600 text-white px-3 py-1 rounded-lg">Rad etish</button>
           </div>
         </div>
       `).join('');
     });
 
-    async function approvePay(id) {
-      await db.ref('purchases/' + id).update({ status: 'approved' });
-      toast("To'lov tasdiqlandi", "ok");
+    async function addNewProject(e) {
+      e.preventDefault();
+      const title = $('pTitle').value.trim();
+      const category = $('pCategory').value.trim();
+      const price = Number($('pPrice').value);
+      const description = $('pDesc').value.trim();
+      const fileUrl = $('pUrl').value.trim();
+      const fileInput = $('pFile').files[0];
+
+      let fileData = null;
+      let fileName = null;
+
+      if (fileInput) {
+        fileName = fileInput.name;
+        fileData = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = e => resolve(e.target.result);
+          reader.readAsDataURL(fileInput);
+        });
+      }
+
+      await db.ref('projects').push({
+        title, category, price, description, fileUrl: fileUrl || null, fileData, fileName, createdAt: Date.now()
+      });
+
+      alert("Muvaffaqiyatli qo'shildi!");
+      e.target.reset();
     }
-    async function rejectPay(id) {
-      await db.ref('purchases/' + id).update({ status: 'revoked' });
-      toast("To'lov rad etildi", "warn");
+
+    async function updatePurchase(id, status) {
+      await db.ref('purchases/' + id).update({ status });
+      alert("Holat yangilandi: " + status);
     }
+
+    async function deleteProject(id) {
+      if (confirm("Haqiqatan ham o'chirmoqchimisiz?")) {
+        await db.ref('projects/' + id).remove();
+        alert("O'chirildi!");
+      }
+    }
+
+    function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
   </script>
 </body>
 </html>
