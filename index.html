@@ -13,6 +13,7 @@
     body { font-family: system-ui, -apple-system, sans-serif; background: #070a13; color: #f8fafc; }
     .glass-card { background: rgba(15,23,42,.85); border: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(16px); }
     .inp { width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: .75rem; padding: .6rem .75rem; font-size: .75rem; color: #fff; outline: none; }
+    .inp:focus { border-color: #6366f1; }
   </style>
 </head>
 <body class="p-4 max-w-5xl mx-auto space-y-6">
@@ -40,25 +41,46 @@
     </div>
   </div>
 
+  <!-- LOYIHA YOKI SILKA QO'SHISH -->
+  <section class="glass-card p-5 rounded-2xl space-y-4 border border-slate-800">
+    <h2 class="text-xs font-bold text-indigo-300 uppercase tracking-wider"><i class="fa-solid fa-plus-circle"></i> Yangi Loyiha yoki Veb-sayt Silkasi Qo'shish</h2>
+    <form onsubmit="addNewProject(event)" class="space-y-3">
+      <div class="grid grid-cols-2 gap-3">
+        <input type="text" id="pTitle" required placeholder="Loyiha nomi" class="inp">
+        <input type="text" id="pCategory" required placeholder="Kategoriya" class="inp">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <input type="number" id="pPrice" required placeholder="Narxi (UZS)" class="inp">
+        <input type="url" id="pUrl" placeholder="Veb-sayt silkasi (https://...) — ixtiyoriy" class="inp">
+      </div>
+      <textarea id="pDesc" rows="2" placeholder="Qisqacha tavsif" class="inp"></textarea>
+      <div class="flex items-center gap-2">
+        <label class="text-xs text-slate-400">Fayl biriktirish (agar silka bo'lmasa):</label>
+        <input type="file" id="pFile" class="text-xs text-slate-400">
+      </div>
+      <button type="submit" id="saveBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 py-3 rounded-xl text-xs font-bold text-white">Loyihani Qo'shish</button>
+    </form>
+  </section>
+
   <!-- PROMO-KOD QO'SHISH -->
   <section class="glass-card p-5 rounded-2xl space-y-4 border border-violet-500/20">
-    <h2 class="text-xs font-bold text-violet-400 uppercase tracking-wider"><i class="fa-solid fa-ticket"></i> Yangi Promo-kod yaratish</h2>
+    <h2 class="text-xs font-bold text-violet-400 uppercase tracking-wider"><i class="fa-solid fa-ticket"></i> Promo-kod yaratish</h2>
     <form onsubmit="createPromoCode(event)" class="flex gap-2">
       <input type="text" id="promoCodeName" required placeholder="Kod (masalan: STUDENT25)" class="inp uppercase">
-      <input type="number" id="promoDiscount" required placeholder="Chegirma % (masalan: 20)" class="inp">
+      <input type="number" id="promoDiscount" required placeholder="Chegirma %" class="inp">
       <button type="submit" class="bg-violet-600 text-white px-5 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap">Yaratish</button>
     </form>
   </section>
 
-  <!-- TO'LOV CHEKLARI (MODERATSIYA) -->
+  <!-- TO'LOV CHEKLARI -->
   <section class="glass-card p-5 rounded-2xl space-y-4 border border-amber-500/20">
     <h2 class="text-xs font-bold text-amber-400 uppercase tracking-wider"><i class="fa-solid fa-receipt"></i> To'lov Cheklari (Tasdiqlash Kutilmoqda)</h2>
     <div id="pendingPurchases" class="space-y-3"><div class="text-xs text-slate-500">Tekshirilmoqda...</div></div>
   </section>
 
-  <!-- TAVSIYA QILINGAN / AVTORLAR TOMONIDAN YUBorilgan LOYIHALAR -->
+  <!-- AVTORLAR MODERATSIYASI -->
   <section class="glass-card p-5 rounded-2xl space-y-4 border border-indigo-500/20">
-    <h2 class="text-xs font-bold text-indigo-300 uppercase tracking-wider"><i class="fa-solid fa-store"></i> Avtorlardan kelgan ishlar (Moderatsiya)</h2>
+    <h2 class="text-xs font-bold text-indigo-300 uppercase tracking-wider"><i class="fa-solid fa-store"></i> Avtorlardan kelgan ishlar</h2>
     <div id="moderationList" class="space-y-2"><div class="text-xs text-slate-500">Kutilayotgan ishlar yo'q.</div></div>
   </section>
 
@@ -83,7 +105,6 @@
     const $ = id => document.getElementById(id);
     function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
-    // DASHBOARD STATISTIKA VA XARIDLAR
     db.ref('purchases').on('value', snap => {
       const data = snap.val();
       const purchases = data ? Object.keys(data).map(k => ({ id: k, ...data[k] })) : [];
@@ -117,7 +138,6 @@
       `).join('');
     });
 
-    // LOYIHALAR VA MODERATSIYA
     db.ref('projects').on('value', snap => {
       const data = snap.val();
       const projects = data ? Object.keys(data).map(k => ({ id: k, ...data[k] })) : [];
@@ -130,7 +150,7 @@
         <div class="bg-slate-900 border border-indigo-500/30 p-3 rounded-xl flex justify-between items-center text-xs">
           <div><b>${esc(p.title)}</b> (${esc(p.category)}) - ${Number(p.price).toLocaleString()} UZS</div>
           <div class="flex gap-2">
-            <button onclick="approveProject('${p.id}')" class="bg-emerald-600 px-3 py-1 rounded-lg text-white font-bold">Ruxsat berish</button>
+            <button onclick="approveProject('${p.id}')" class="bg-emerald-600 px-3 py-1 rounded-lg text-white font-bold">Ruxsat</button>
             <button onclick="deleteProject('${p.id}')" class="bg-rose-600 px-3 py-1 rounded-lg text-white">O'chirish</button>
           </div>
         </div>
@@ -140,19 +160,53 @@
         <div class="bg-slate-900/60 border border-slate-800 p-3 rounded-xl flex justify-between items-center text-xs">
           <div>
             <div class="font-bold text-white">${esc(p.title)} <span class="text-indigo-400">(${esc(p.category)})</span></div>
-            <div class="text-[10px] text-slate-400">Narxi: ${Number(p.price).toLocaleString()} UZS</div>
+            <div class="text-[10px] text-slate-400">Narxi: ${Number(p.price).toLocaleString()} UZS · ${p.fileUrl ? '🌐 Silka' : '📁 Fayl'}</div>
           </div>
           <button onclick="deleteProject('${p.id}')" class="bg-rose-600/20 text-rose-400 px-3 py-1.5 rounded-xl text-xs hover:bg-rose-600 hover:text-white">O'chirish</button>
         </div>
       `).join('') : '<div class="text-xs text-slate-500">Loyihalar mavjud emas.</div>';
     });
 
+    async function addNewProject(e) {
+      e.preventDefault();
+      const title = $('pTitle').value.trim();
+      const category = $('pCategory').value.trim();
+      const price = Number($('pPrice').value);
+      const description = $('pDesc').value.trim();
+      const fileUrl = $('pUrl').value.trim();
+      const fileInput = $('pFile').files[0];
+
+      let fileData = null;
+      let fileName = null;
+
+      if (fileInput) {
+        fileName = fileInput.name;
+        fileData = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = e => resolve(e.target.result);
+          reader.readAsDataURL(fileInput);
+        });
+      }
+
+      const newRef = db.ref('projects').push();
+      await newRef.set({
+        title, category, price, description, fileUrl: fileUrl || null, fileName, status: 'approved', createdAt: Date.now()
+      });
+
+      if (fileData) {
+        await db.ref('project_files/' + newRef.key).set({ data: fileData });
+      }
+
+      alert("Loyiha qo'shildi!");
+      e.target.reset();
+    }
+
     async function createPromoCode(e) {
       e.preventDefault();
       const code = $('promoCodeName').value.trim().toUpperCase();
       const discount = Number($('promoDiscount').value);
       await db.ref('promo_codes/' + code).set({ discountPercent: discount });
-      alert("Promo-kod muvaffaqiyatli yaratildi!");
+      alert("Promo-kod yaratildi!");
       e.target.reset();
     }
 
