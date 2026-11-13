@@ -1,121 +1,170 @@
 <!DOCTYPE html>
-<html lang="uz">
+<html lang="uz" class="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PRO Admin Control Panel - EduProjects</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Admin Control PRO — EduProjects</title>
+  <meta name="theme-color" content="#060913">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' }
+  </script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
   <style>
-    body { background-color: #070a12; color: #f8fafc; font-family: sans-serif; }
-    .glass-box { background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #060913; color: #f8fafc; }
+    .glass-box { background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
     .tab-btn.active { background-color: #4f46e5; color: #ffffff; border-color: #6366f1; }
+    .drop-zone--over { border-color: #6366f1 !important; background-color: rgba(99, 102, 241, 0.1) !important; }
+    @keyframes slideDown { from { transform: translate(-50%, -100%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+    .toast-anim { animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
   </style>
 </head>
-<body class="pb-20">
+<body class="pb-24 select-none">
 
-  <!-- PIN EKRANI -->
-  <div id="lockScreen" class="fixed inset-0 bg-[#070a12] z-50 flex items-center justify-center p-4">
-    <div class="glass-box w-full max-w-xs rounded-3xl p-6 text-center space-y-4 border border-indigo-500/30 shadow-2xl">
-      <div class="w-14 h-14 rounded-2xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center text-2xl mx-auto border border-indigo-500/30"><i class="fa-solid fa-lock"></i></div>
-      <h2 class="text-base font-bold text-white">Admin Panel</h2>
-      <form onsubmit="unlockAdmin(event)" class="space-y-3">
-        <input type="password" id="pinInput" maxlength="8" required placeholder="PIN (1234)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-center text-lg font-bold text-white focus:outline-none">
-        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl text-xs">Kirish</button>
-      </form>
-    </div>
+  <!-- ZAMONAVIY TOAST BILDIRISHNOMA -->
+  <div id="toastBox" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] hidden max-w-[90vw] w-max">
+    <div id="toastContent" class="px-4 py-3 rounded-2xl shadow-2xl border text-xs font-semibold flex items-center gap-2.5 backdrop-blur-xl"></div>
   </div>
 
+  <!-- HEADER -->
   <header class="sticky top-0 z-40 glass-box px-4 py-3.5 flex justify-between items-center border-b border-slate-800">
-    <div class="flex items-center space-x-2.5">
-      <span class="bg-indigo-600/20 text-indigo-400 p-2 rounded-xl border border-indigo-500/20"><i class="fa-solid fa-shield-halved text-lg"></i></span>
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-2xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center text-base font-bold border border-indigo-500/30">
+        <i class="fa-solid fa-gauge-high"></i>
+      </div>
       <div>
-        <h1 class="text-sm font-bold text-white leading-tight">Admin Control PRO</h1>
-        <p class="text-[10px] text-emerald-400">Barcha Ma'lumotlar Ochiq</p>
+        <h1 class="text-xs font-extrabold text-white leading-tight">Admin Control PRO</h1>
+        <p class="text-[10px] text-emerald-400 font-semibold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Jonli Rejim</p>
       </div>
     </div>
-    <button onclick="lockAdmin()" class="bg-slate-900 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-xl text-xs"><i class="fa-solid fa-lock text-amber-400"></i> Qulflash</button>
+    <div class="bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 px-3 py-1.5 rounded-xl text-xs font-bold">
+      <i class="fa-solid fa-user-shield mr-1"></i> Admin
+    </div>
   </header>
 
   <main class="max-w-lg mx-auto px-4 mt-5 space-y-5">
     
-    <!-- STATISTIKA -->
-    <div class="grid grid-cols-2 gap-2.5">
-      <div class="glass-box p-3.5 rounded-2xl border border-amber-500/20">
-        <div class="text-[10px] text-amber-400 uppercase font-semibold">Kutilayotgan So'rovlar</div>
-        <div class="text-xl font-extrabold text-white mt-1" id="statPending">0</div>
+    <!-- STATISTIKA KARTALARI -->
+    <div class="grid grid-cols-2 gap-3">
+      <div class="glass-box p-4 rounded-3xl border border-amber-500/20 relative overflow-hidden">
+        <div class="text-[10px] text-amber-400 uppercase font-extrabold flex justify-between items-center">
+          <span>Kutilayotgan</span> <i class="fa-solid fa-clock text-xs"></i>
+        </div>
+        <div class="text-2xl font-extrabold text-white mt-1.5" id="statPending">0</div>
+        <div class="text-[9px] text-slate-400 mt-0.5">Tasdiqlanmagan cheklar</div>
       </div>
-      <div class="glass-box p-3.5 rounded-2xl border border-emerald-500/20">
-        <div class="text-[10px] text-emerald-400 uppercase font-semibold">Jami Daromad</div>
-        <div class="text-base font-extrabold text-emerald-400 mt-1.5 truncate" id="statRevenue">0 UZS</div>
+      <div class="glass-box p-4 rounded-3xl border border-emerald-500/20 relative overflow-hidden">
+        <div class="text-[10px] text-emerald-400 uppercase font-extrabold flex justify-between items-center">
+          <span>Jami Daromad</span> <i class="fa-solid fa-wallet text-xs"></i>
+        </div>
+        <div class="text-sm font-extrabold text-emerald-400 mt-2 truncate" id="statRevenue">0 UZS</div>
+        <div class="text-[9px] text-slate-400 mt-0.5">Muvaffaqiyatli xaridlar</div>
       </div>
     </div>
 
-    <!-- TABS -->
+    <!-- TABS (NAVIGATSIYA) -->
     <div class="grid grid-cols-3 gap-2 bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800">
-      <button onclick="switchTab('payments')" id="tab-btn-payments" class="tab-btn active py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-receipt"></i> To'lovlar</button>
-      <button onclick="switchTab('projects')" id="tab-btn-projects" class="tab-btn py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-folder-plus"></i> Loyihalar</button>
-      <button onclick="switchTab('settings')" id="tab-btn-settings" class="tab-btn py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-sliders"></i> Sozlamalar</button>
+      <button onclick="switchTab('payments')" id="tab-btn-payments" class="tab-btn active py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
+        <i class="fa-solid fa-receipt"></i> To'lovlar
+      </button>
+      <button onclick="switchTab('projects')" id="tab-btn-projects" class="tab-btn py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition flex items-center justify-center gap-1.5">
+        <i class="fa-solid fa-folder-plus"></i> Loyihalar
+      </button>
+      <button onclick="switchTab('settings')" id="tab-btn-settings" class="tab-btn py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition flex items-center justify-center gap-1.5">
+        <i class="fa-solid fa-sliders"></i> Sozlamalar
+      </button>
     </div>
 
-    <!-- 1. TO'LOVLAR -->
+    <!-- 1. TO'LOVLAR BO'LIMI -->
     <div id="tab-payments" class="space-y-4">
       <div class="glass-box p-4 rounded-3xl border border-slate-800 space-y-3">
-        <h2 class="text-xs font-bold text-white uppercase tracking-wider"><i class="fa-solid fa-money-check-dollar text-amber-400 mr-1"></i> Barcha To'lov So'rovlari</h2>
+        <div class="flex justify-between items-center">
+          <h2 class="text-xs font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-money-check-dollar text-amber-400"></i> To'lov So'rovlari va Cheklar
+          </h2>
+          <select id="paymentFilter" onchange="renderPayments()" class="bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1 text-[11px] text-white focus:outline-none">
+            <option value="all">Barchasi</option>
+            <option value="pending">Kutilmoqda</option>
+            <option value="approved">Tasdiqlangan</option>
+          </select>
+        </div>
         <div id="requestsList" class="space-y-3">
-          <div class="text-center text-slate-500 text-xs py-6">Yuklanmoqda...</div>
+          <div class="text-center text-slate-500 text-xs py-8">So'rovlar yuklanmoqda...</div>
         </div>
       </div>
     </div>
 
-    <!-- 2. LOYIHALAR -->
+    <!-- 2. LOYIHALAR BO'LIMI -->
     <div id="tab-projects" class="space-y-5 hidden">
       <div class="glass-box p-5 rounded-3xl border border-slate-800 shadow-2xl">
-        <h2 class="text-xs font-bold text-white mb-4 uppercase tracking-wider"><i class="fa-solid fa-plus-circle text-indigo-400 mr-1"></i> Yangi Loyiha Qo'shish</h2>
+        <h2 class="text-xs font-extrabold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
+          <i class="fa-solid fa-cloud-arrow-up text-indigo-400 text-sm"></i> Yangi Loyiha yoki ZIP Yuklash
+        </h2>
         <form onsubmit="saveProject(event)" class="space-y-3">
-          <input type="text" id="pTitle" placeholder="Loyiha Nomi" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none">
+          <input type="text" id="pTitle" placeholder="Loyiha Nomi (ZIP yuklansa shart emas)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
           <div class="grid grid-cols-2 gap-2">
-            <select id="pCategory" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-2 py-2.5 text-xs text-white">
+            <select id="pCategory" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none">
               <option value="Mustaqil ish">Mustaqil ish</option>
-              <option value="Veb-sayt">Veb-sayt</option>
               <option value="Kurs ishi">Kurs ishi</option>
+              <option value="Veb-sayt">Veb-sayt</option>
             </select>
-            <input type="number" id="pPrice" required placeholder="Narxi UZS" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white">
+            <input type="number" id="pPrice" required placeholder="Narxi (UZS)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
           </div>
-          <input type="file" id="fileInput" onchange="handleFileSelect(this.files[0])" class="w-full text-xs text-slate-400 file:bg-indigo-600 file:text-white file:py-1.5 file:px-3 file:rounded-xl file:border-0 cursor-pointer">
-          <input type="url" id="pFileUrl" placeholder="Yoki Fayl Linki" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white">
-          <textarea id="pDesc" rows="2" placeholder="Tavsif..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white"></textarea>
-          <button type="submit" id="projSubmitBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl text-xs">E'lon Qilish</button>
+          <div>
+            <div id="dropZone" class="border-2 border-dashed border-slate-700 bg-slate-900/60 rounded-2xl p-4 text-center cursor-pointer hover:border-indigo-500 transition relative">
+              <i class="fa-solid fa-file-zipper text-2xl text-indigo-400 mb-1"></i>
+              <p class="text-[11px] text-slate-300 font-semibold" id="fileStatusText">Fayl yoki ZIP arxivni tanlang</p>
+              <input type="file" id="fileInput" onchange="handleFileSelect(this.files[0])" class="absolute inset-0 opacity-0 cursor-pointer">
+            </div>
+          </div>
+          <input type="url" id="pFileUrl" placeholder="Yoki Tashqi Link (Google Drive / Telegram)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none">
+          <textarea id="pDesc" rows="2" placeholder="Batafsil tavsif..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none"></textarea>
+          <button type="submit" id="projSubmitBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold py-3.5 rounded-xl text-xs shadow-lg shadow-indigo-600/20 transition active:scale-95">
+            Barchaga E'lon Qilish
+          </button>
         </form>
       </div>
 
       <div class="glass-box p-5 rounded-3xl border border-slate-800 space-y-3">
-        <h2 class="text-xs font-bold text-white uppercase tracking-wider"><i class="fa-solid fa-folder-open text-indigo-400 mr-1"></i> Barcha Loyihalar Ro'yxati</h2>
+        <h2 class="text-xs font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
+          <i class="fa-solid fa-folder-open text-indigo-400"></i> Barcha Yuklangan Loyihalar
+        </h2>
         <div id="adminProjectsList" class="space-y-2.5">
-          <div class="text-center text-slate-500 text-xs py-2">Yuklanmoqda...</div>
+          <div class="text-center text-slate-500 text-xs py-4">Loyihalar yuklanmoqda...</div>
         </div>
       </div>
     </div>
 
-    <!-- 3. SOZLAMALAR -->
+    <!-- 3. SOZLAMALAR BO'LIMI -->
     <div id="tab-settings" class="space-y-5 hidden">
-      <div class="glass-box p-5 rounded-3xl border border-slate-800">
-        <h2 class="text-xs font-bold text-white mb-3 uppercase tracking-wider"><i class="fa-solid fa-bullhorn text-amber-400 mr-1"></i> Global E'lon</h2>
+      <div class="glass-box p-5 rounded-3xl border border-amber-500/30">
+        <h2 class="text-xs font-extrabold text-white mb-3 uppercase tracking-wider flex items-center gap-2">
+          <i class="fa-solid fa-bullhorn text-amber-400"></i> Talabalar Uchun Global E'lon
+        </h2>
         <form onsubmit="saveAnnouncement(event)" class="space-y-3">
-          <textarea id="announcementText" rows="2" placeholder="Talabalar uchun e'lon..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"></textarea>
-          <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 rounded-xl text-xs">Saqlash</button>
+          <textarea id="announcementText" rows="2" placeholder="E'lon matnini yozing..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none"></textarea>
+          <div class="flex gap-2">
+            <button type="submit" class="flex-1 bg-amber-600 hover:bg-amber-500 text-white font-extrabold py-2.5 rounded-xl text-xs transition">Saqlash</button>
+            <button type="button" onclick="clearAnnouncement()" class="bg-slate-800 hover:bg-rose-600/80 text-slate-300 hover:text-white px-4 py-2.5 rounded-xl text-xs font-bold transition">O'chirish</button>
+          </div>
         </form>
       </div>
 
       <div class="glass-box p-5 rounded-3xl border border-slate-800">
-        <h2 class="text-xs font-bold text-white mb-3 uppercase tracking-wider"><i class="fa-solid fa-credit-card text-emerald-400 mr-1"></i> Karta Qo'shish</h2>
+        <h2 class="text-xs font-extrabold text-white mb-3 uppercase tracking-wider flex items-center gap-2">
+          <i class="fa-solid fa-credit-card text-emerald-400"></i> To'lov Kartalari Boshqaruvi
+        </h2>
         <form onsubmit="saveCard(event)" class="space-y-2.5">
-          <input type="text" id="cNumber" required placeholder="Karta raqami" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
-          <input type="text" id="cHolder" required placeholder="F.I.O" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
-          <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-xl text-xs">Qo'shish</button>
+          <input type="text" id="cNumber" required placeholder="Karta raqami (8600 ...)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none">
+          <div class="grid grid-cols-2 gap-2">
+            <input type="text" id="cHolder" required placeholder="F.I.O (Fattoxov A.)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none">
+            <input type="text" id="cBank" required placeholder="Uzcard / Humo" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none">
+          </div>
+          <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold py-2.5 rounded-xl text-xs transition">Karta Qo'shish</button>
         </form>
         <div id="adminCardsList" class="mt-3 space-y-2"></div>
       </div>
@@ -123,6 +172,25 @@
   </main>
 
   <script>
+    function showToast(msg, type = 'info') {
+      const box = document.getElementById('toastBox');
+      const content = document.getElementById('toastContent');
+      const styles = {
+        success: 'bg-emerald-950/90 border-emerald-500/40 text-emerald-300',
+        error: 'bg-rose-950/90 border-rose-500/40 text-rose-300',
+        info: 'bg-slate-900/95 border-indigo-500/40 text-indigo-200'
+      };
+      const icons = {
+        success: '<i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>',
+        error: '<i class="fa-solid fa-circle-exclamation text-rose-400 text-sm"></i>',
+        info: '<i class="fa-solid fa-circle-info text-indigo-400 text-sm"></i>'
+      };
+      content.className = `px-4 py-3 rounded-2xl shadow-2xl border text-xs font-semibold flex items-center gap-2.5 backdrop-blur-xl toast-anim ${styles[type] || styles.info}`;
+      content.innerHTML = `${icons[type] || icons.info} <span>${msg}</span>`;
+      box.classList.remove('hidden');
+      setTimeout(() => box.classList.add('hidden'), 3500);
+    }
+
     const firebaseConfig = {
       apiKey: "AIzaSyDMmB0tW-JGizWSOdlFJJd68p6sksrlS_8",
       authDomain: "mustaqil-ish-63c2c.firebaseapp.com",
@@ -135,74 +203,140 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let currentAdminPin = '1234';
-    db.ref("settings/admin_pin").on("value", snap => { if(snap.val()) currentAdminPin = String(snap.val()); });
-
-    if (sessionStorage.getItem('admin_unlocked') === 'true') document.getElementById('lockScreen').classList.add('hidden');
-
-    function unlockAdmin(e) {
-      e.preventDefault();
-      if (document.getElementById('pinInput').value.trim() === currentAdminPin) {
-        sessionStorage.setItem('admin_unlocked', 'true');
-        document.getElementById('lockScreen').classList.add('hidden');
-      } else { alert("PIN noto'g'ri!"); }
-    }
-
-    function lockAdmin() { sessionStorage.removeItem('admin_unlocked'); document.getElementById('lockScreen').classList.remove('hidden'); }
-
     function switchTab(tabName) {
       ['payments', 'projects', 'settings'].forEach(t => {
         document.getElementById('tab-' + t).classList.add('hidden');
-        document.getElementById('tab-btn-' + t).className = "tab-btn py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition flex items-center justify-center gap-1.5";
+        const btn = document.getElementById('tab-btn-' + t);
+        btn.className = "tab-btn py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition flex items-center justify-center gap-1.5";
       });
       document.getElementById('tab-' + tabName).classList.remove('hidden');
       document.getElementById('tab-btn-' + tabName).className = "tab-btn active py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5";
     }
 
-    db.ref("settings/announcement").on("value", snap => { if(snap.val()) document.getElementById('announcementText').value = snap.val(); });
-    function saveAnnouncement(e) { e.preventDefault(); db.ref("settings/announcement").set(document.getElementById('announcementText').value.trim()).then(() => alert("E'lon saqlandi!")); }
+    db.ref("settings/announcement").on("value", snap => {
+      if (snap.val()) document.getElementById('announcementText').value = snap.val();
+    });
+
+    function saveAnnouncement(e) {
+      e.preventDefault();
+      const text = document.getElementById('announcementText').value.trim();
+      db.ref("settings/announcement").set(text).then(() => showToast("E'lon faollashtirildi!", "success"));
+    }
+
+    function clearAnnouncement() {
+      db.ref("settings/announcement").remove().then(() => {
+        document.getElementById('announcementText').value = '';
+        showToast("E'lon o'chirildi!", "info");
+      });
+    }
 
     function saveCard(e) {
       e.preventDefault();
-      db.ref("settings/cards").push().set({ number: document.getElementById('cNumber').value, holder: document.getElementById('cHolder').value }).then(() => { alert("Karta qo'shildi!"); e.target.reset(); });
+      db.ref("settings/cards").push().set({
+        number: document.getElementById('cNumber').value.trim(),
+        holder: document.getElementById('cHolder').value.trim(),
+        bank: document.getElementById('cBank').value.trim()
+      }).then(() => {
+        showToast("Karta muvaffaqiyatli qo'shildi!", "success");
+        e.target.reset();
+      });
     }
 
     db.ref("settings/cards").on("value", snapshot => {
       const container = document.getElementById('adminCardsList');
       container.innerHTML = '';
       const data = snapshot.val();
-      if (data) Object.keys(data).forEach(k => {
-        container.innerHTML += `<div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center text-xs text-white"><span>${data[k].number} (${data[k].holder})</span><button onclick="db.ref('settings/cards/${k}').remove()" class="text-rose-400"><i class="fa-solid fa-trash"></i></button></div>`;
-      });
+      if (data) {
+        Object.keys(data).forEach(k => {
+          const c = data[k];
+          container.innerHTML += `
+            <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 flex justify-between items-center text-xs">
+              <div><span class="font-bold font-mono text-white">${c.number}</span> <span class="text-slate-400 text-[10px]">(${c.holder})</span></div>
+              <button onclick="db.ref('settings/cards/${k}').remove()" class="text-rose-400 hover:text-rose-300 p-1"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          `;
+        });
+      }
     });
 
-    let fileBase64Data = null;
-    let fileNameStr = '';
+    let extractedFilesList = [];
+    const dropZone = document.getElementById('dropZone');
+    ['dragenter', 'dragover'].forEach(eName => { dropZone.addEventListener(eName, e => e.preventDefault(), false); });
+    ['dragleave', 'drop'].forEach(eName => { dropZone.addEventListener(eName, e => e.preventDefault(), false); });
+    dropZone.addEventListener('drop', e => { if (e.dataTransfer.files.length) handleFileSelect(e.dataTransfer.files[0]); });
+
     async function handleFileSelect(file) {
       if (!file) return;
-      const reader = new FileReader();
-      reader.onload = e => { fileBase64Data = e.target.result; fileNameStr = file.name; };
-      reader.readAsDataURL(file);
+      document.getElementById('fileStatusText').innerHTML = `<span class="text-indigo-400 font-bold"><i class="fa-solid fa-spinner fa-spin"></i> O'qilmoqda...</span>`;
+      extractedFilesList = [];
+      if (file.name.endsWith('.zip')) {
+        try {
+          const zip = new JSZip();
+          const zipContent = await zip.loadAsync(file);
+          for (let relativePath in zipContent.files) {
+            let zipEntry = zipContent.files[relativePath];
+            if (!zipEntry.dir && !zipEntry.name.startsWith('__MACOSX')) {
+              let blob = await zipEntry.async("blob");
+              let base64Data = await blobToBase64(blob);
+              let originalName = zipEntry.name.split('/').pop();
+              if (originalName) extractedFilesList.push({ name: originalName, data: base64Data });
+            }
+          }
+          document.getElementById('fileStatusText').innerHTML = `<span class="text-emerald-400 font-bold">ZIP ichidan ${extractedFilesList.length} ta fayl olindi!</span>`;
+        } catch (err) {
+          showToast("ZIP faylni ochishda xatolik!", "error");
+        }
+      } else {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          extractedFilesList.push({ name: file.name, data: e.target.result });
+          document.getElementById('fileStatusText').innerHTML = `<span class="text-emerald-400 font-bold">${file.name} tayyor!</span>`;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function blobToBase64(blob) {
+      return new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
     }
 
     function saveProject(e) {
       e.preventDefault();
-      const title = document.getElementById('pTitle').value.trim() || fileNameStr || "Loyiha";
+      const fileUrl = document.getElementById('pFileUrl').value.trim() || null;
+      if (extractedFilesList.length === 0 && !fileUrl) {
+        showToast("Iltimos, fayl yuklang yoki link kiriting!", "error");
+        return;
+      }
+      const btn = document.getElementById('projSubmitBtn');
+      btn.disabled = true; btn.innerText = "E'lon qilinmoqda...";
+      
+      const customTitle = document.getElementById('pTitle').value.trim();
       const category = document.getElementById('pCategory').value;
       const price = Number(document.getElementById('pPrice').value);
-      const fileUrl = document.getElementById('pFileUrl').value.trim() || null;
       const description = document.getElementById('pDesc').value.trim();
 
-      const btn = document.getElementById('projSubmitBtn');
-      btn.disabled = true; btn.innerText = "Yuklanmoqda...";
+      let promises = [];
+      if (extractedFilesList.length > 0) {
+        promises = extractedFilesList.map((fileObj, index) => {
+          let finalTitle = (extractedFilesList.length === 1 && customTitle) ? customTitle : fileObj.name;
+          return db.ref("projects").push().set({ title: finalTitle, category, price, fileData: fileObj.data, fileName: fileObj.name, fileUrl, description, createdAt: Date.now() + index });
+        });
+      } else {
+        promises.push(db.ref("projects").push().set({ title: customTitle || "Loyiha", category, price, fileData: null, fileName: customTitle || "loyiha", fileUrl, description, createdAt: Date.now() }));
+      }
 
-      db.ref("projects").push().set({
-        title, category, price, fileData: fileBase64Data, fileName: fileNameStr || "loyiha", fileUrl, description, createdAt: Date.now()
-      }).then(() => {
-        alert("Loyiha muvaffaqiyatli qo'shildi!");
+      Promise.all(promises).then(() => {
+        showToast("Loyiha(lar) muvaffaqiyatli qo'shildi!", "success");
         e.target.reset();
-        fileBase64Data = null; fileNameStr = '';
-      }).finally(() => { btn.disabled = false; btn.innerText = "E'lon Qilish"; });
+        extractedFilesList = [];
+        document.getElementById('fileStatusText').innerText = "Fayl yoki ZIP arxivni tanlang";
+      }).finally(() => {
+        btn.disabled = false; btn.innerText = "Barchaga E'lon Qilish";
+      });
     }
 
     let adminProjectsData = {};
@@ -210,42 +344,72 @@
       adminProjectsData = snapshot.val() || {};
       const container = document.getElementById('adminProjectsList');
       const keys = Object.keys(adminProjectsData);
-      if (keys.length === 0) { container.innerHTML = `<div class="text-center py-2 text-slate-500 text-xs">Loyihalar yo'q.</div>`; return; }
+      if (keys.length === 0) {
+        container.innerHTML = `<div class="text-center py-6 text-slate-500 text-xs">Hozircha loyihalar yo'q.</div>`;
+        return;
+      }
       let html = '';
       keys.reverse().forEach(k => {
         const p = adminProjectsData[k];
-        html += `<div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 flex justify-between items-center text-xs text-white"><div><b>${p.title}</b><br><span class="text-indigo-400">${Number(p.price || 0).toLocaleString()} UZS</span></div><button onclick="db.ref('projects/${k}').remove()" class="text-rose-400 p-2"><i class="fa-solid fa-trash"></i></button></div>`;
+        html += `
+          <div class="bg-slate-900/90 p-3 rounded-2xl border border-slate-800 flex justify-between items-center text-xs">
+            <div class="pr-2">
+              <div class="font-bold text-white">${p.title}</div>
+              <div class="text-[10px] text-slate-400 mt-0.5"><span class="text-indigo-400 font-semibold">${Number(p.price || 0).toLocaleString()} UZS</span> • ${p.category}</div>
+            </div>
+            <button onclick="db.ref('projects/${k}').remove()" class="bg-rose-600/20 text-rose-400 hover:bg-rose-600 hover:text-white p-2.5 rounded-xl transition"><i class="fa-solid fa-trash-can"></i></button>
+          </div>
+        `;
       });
       container.innerHTML = html;
     });
 
     db.ref("purchases").on("value", snapshot => {
       const list = document.getElementById('requestsList');
+      const filterStatus = document.getElementById('paymentFilter').value;
       const data = snapshot.val() || {};
       let pendingCount = 0, totalRevenue = 0, html = '';
       const keys = Object.keys(data);
-      if (keys.length === 0) { list.innerHTML = `<div class="text-center py-4 text-slate-500 text-xs">So'rovlar yo'q</div>`; return; }
       
       keys.reverse().forEach(k => {
         const req = { id: k, ...data[k] };
         if (req.status === 'pending') pendingCount++;
         if (req.status === 'approved') totalRevenue += Number(req.paidAmount || 0);
-        
-        let badge = req.status === 'pending' ? '<span class="text-amber-400 font-bold">KUTILMOQDA</span>' : (req.status === 'approved' ? '<span class="text-emerald-400 font-bold">TASDIQLANGAN</span>' : '<span class="text-rose-400 font-bold">RAD</span>');
-        let imgTag = req.receiptImage ? `<a href="${req.receiptImage}" target="_blank"><img src="${req.receiptImage}" class="w-full h-24 object-cover rounded-xl mt-2 border border-slate-700"></a>` : '';
+
+        if (filterStatus !== 'all' && req.status !== filterStatus) return;
+
+        const proj = adminProjectsData[req.projectId] || { title: 'Loyiha' };
+        let badge = req.status === 'pending'
+          ? '<span class="bg-amber-500/15 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-lg text-[10px] font-bold">Kutilmoqda</span>'
+          : '<span class="bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-lg text-[10px] font-bold">Tasdiqlangan</span>';
+
+        let imgTag = req.receiptImage ? `<a href="${req.receiptImage}" target="_blank" class="block mt-2"><img src="${req.receiptImage}" class="w-full h-32 object-cover rounded-xl border border-slate-700"></a>` : '';
 
         html += `
-          <div class="bg-slate-900 p-3.5 rounded-2xl border border-slate-800 text-xs space-y-2 text-white">
-            <div class="flex justify-between"><div><b>${req.studentName}</b><br><span class="text-slate-400">${req.studentContact} • <b>${Number(req.paidAmount || 0).toLocaleString()} UZS</b></span></div><div>${badge}</div></div>
+          <div class="bg-slate-900/90 p-4 rounded-3xl border border-slate-800 text-xs space-y-2.5">
+            <div class="flex justify-between items-start">
+              <div>
+                <div class="font-extrabold text-white text-sm">${req.studentName}</div>
+                <div class="text-slate-400 text-[11px] mt-0.5"><i class="fa-solid fa-phone mr-1"></i>${req.studentContact} • <b class="text-emerald-400">${Number(req.paidAmount || 0).toLocaleString()} UZS</b></div>
+                <div class="text-indigo-300 text-[11px] font-semibold mt-1"><i class="fa-solid fa-file-lines mr-1"></i>${proj.title}</div>
+              </div>
+              <div>${badge}</div>
+            </div>
             ${imgTag}
             <div class="flex gap-2 pt-1">
-              ${req.status === 'pending' ? `<button onclick="db.ref('purchases/${req.id}').update({status: 'approved'})" class="flex-1 bg-emerald-600 py-1.5 rounded-xl font-bold">Ruxsat berish</button><button onclick="db.ref('purchases/${req.id}').update({status: 'revoked'})" class="bg-amber-600 px-3 py-1.5 rounded-xl font-bold">Rad etish</button>` : `<button onclick="db.ref('purchases/${req.id}').update({status: 'pending'})" class="flex-1 bg-slate-800 py-1 rounded-xl text-slate-300">Holatni qaytarish</button>`}
-              <button onclick="db.ref('purchases/${req.id}').remove()" class="bg-rose-600/20 text-rose-400 px-2.5 rounded-xl"><i class="fa-solid fa-trash"></i></button>
+              ${req.status === 'pending' ? `
+                <button onclick="db.ref('purchases/${req.id}').update({status: 'approved'})" class="flex-1 bg-emerald-600 hover:bg-emerald-500 py-2.5 rounded-xl text-white font-extrabold text-xs transition shadow-lg"><i class="fa-solid fa-check mr-1"></i> Ruxsat berish</button>
+                <button onclick="db.ref('purchases/${req.id}').remove()" class="bg-rose-600/20 text-rose-400 px-3 py-2.5 rounded-xl transition"><i class="fa-solid fa-trash"></i></button>
+              ` : `
+                <button onclick="db.ref('purchases/${req.id}').update({status: 'pending'})" class="flex-1 bg-slate-800 hover:bg-slate-700 py-2 rounded-xl text-slate-300 font-semibold text-xs transition">Holatni qaytarish</button>
+                <button onclick="db.ref('purchases/${req.id}').remove()" class="bg-rose-600/20 text-rose-400 px-3 py-2 rounded-xl transition"><i class="fa-solid fa-trash"></i></button>
+              `}
             </div>
           </div>
         `;
       });
-      list.innerHTML = html;
+
+      list.innerHTML = html || `<div class="text-center py-8 text-slate-500 text-xs">So'rovlar topilmadi</div>`;
       document.getElementById('statPending').innerText = pendingCount;
       document.getElementById('statRevenue').innerText = totalRevenue.toLocaleString() + " UZS";
     });
